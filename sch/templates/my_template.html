@@ -1,0 +1,124 @@
+<form method="GET" action="filter">
+    <input type="text" name="cir">
+    <input type="text" name="node">
+    <button type="submit">Submit</button>
+</form>
+<table style="text-align: center;">
+    <thead>
+        <tr>
+            <th style="text-align: left; white-space:nowrap;"><span id="count">0</span> / <span>{{len}}</span></th>
+            <th>Cable Type</th>
+            <th>총길이</th>
+            <th>From Length</th>
+            <th>From Equipment</th>
+            <th>To Equipment</th>
+            <th>To Length</th>
+            <!-- 다른 컬럼 이름도 추가 -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for index, row in data.iterrows %}
+        <tr>
+            <td style="text-align: left; white-space:nowrap;"><button onclick="toggle(this, '{{row.0}}')"
+                    style="background-color: white">{{ row.Circuit }}</button></td>
+            <td>{{ row.CableType }}</td>
+            <td>{{ row.총길이 }}</td>
+            <td>{{ row.FromLength }}</td>
+            <td>{{ row.FromEquipment }}</td>
+            <td>{{ row.ToEquipment }}</td>
+            <td>{{ row.ToLength }}</td>
+            <!-- 다른 컬럼도 추가 -->
+        </tr>
+        <tr>
+            <td></td>
+            <td colspan="6" style="text-align: left;">{{ row.BlockPATH }}</td>
+            <!-- 다른 컬럼도 추가 -->
+        </tr>
+        <tr>
+            <td></td>
+            <td colspan="6" style="text-align: left;" id='{{row.Circuit}}_node'>
+                {% for i in row.NodePATH.split %}
+                <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}' onclick="callen(this, id)"
+                    style="background-color: white">{{ i }}</button>
+                {% endfor %}
+            </td>
+            <!-- 다른 컬럼도 추가 -->
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+    let count = 0;
+
+    function toggle(btn, cellId) {
+        if (btn.style.backgroundColor === "white") {
+            btn.style.backgroundColor = "red";
+            count++;
+        } else {
+            btn.style.backgroundColor = "white";
+            count--;
+        }
+        document.getElementById("count").innerHTML = count;
+    }
+    function callen(btn, cellId) {
+        if (btn.style.backgroundColor === "white") {
+            btn.style.backgroundColor = "red";
+        } else {
+            btn.style.backgroundColor = "white";
+        }
+        var buttons = document.getElementsByName(cellId.split("_")[0]);
+        var countbtn = 0;
+        var redbtn = []
+        for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i].style.backgroundColor === "red") {
+                redbtn.push(i)
+                countbtn++;
+            }
+        }
+        if (countbtn == 2) {
+
+            {% for index, row in data.iterrows %}
+            if ('{{ row.Circuit }}' == cellId.split("_")[0]) {
+                //nodeLength = '{{ row.길이Node }}';
+                //nodeLength = buttons[redbtn[0]].innerText;
+                a = '{{ row.길이Node }}'
+                b = buttons[redbtn[0]].innerText;
+                c = buttons[redbtn[1]].innerText;
+                split_a = a.split(" ")
+                if (a.indexOf(b) !== -1 && a.indexOf(c) !== -1 && a.indexOf(")-T       ") !== -1) {
+                    let firstVal = parseFloat(a.substring(a.indexOf(")-T       ") - 7, a.indexOf(")-T       ")));
+                    let secondVal = parseFloat(a.substring(a.indexOf(c) - 9, a.indexOf(c) - 2));
+                    let thirdVal = parseFloat(a.substring(a.indexOf(b) - 9, a.indexOf(b) - 2));
+                    if (a.indexOf(b) <= a.indexOf(c)) {
+                        fr = Math.round((thirdVal) * 100) / 100;
+                        to = Math.round((firstVal - secondVal) * 100) / 100;
+                        ct = Math.round((secondVal - thirdVal) * 100) / 100;
+                        total = Math.round((fr + to + ct) * 100) / 100
+                    } else {
+                        fr = Math.round((firstVal - thirdVal) * 100) / 100;
+                        to = Math.round((secondVal) * 100) / 100;
+                        ct = Math.round((thirdVal - secondVal) * 100) / 100;
+                        total = Math.round((fr + to + ct) * 100) / 100
+                    }
+                }
+                else {
+                    fr = "N";
+                    to = "N";
+                    ct = "N";
+                    total = ""
+                }
+
+
+                nodeLength = fr + "  <button>" + b + "</button>  " + ct + "  <button>" + c + "</button>  " + to + "<span text = '   '>  </span>    (" + total + ")"
+            }
+            {% endfor %}
+            document.getElementById(cellId.split("_")[0] + '_node').innerHTML = nodeLength;
+            document.getElementById(cellId.split("_")[0] + '_node').style.fontStyle = "bold";
+        }
+        if (countbtn > 2) {
+            buttons[redbtn[1]].style.backgroundColor = "white"
+            countbtn--;
+        }
+        document.getElementById("count").innerHTML = countbtn;
+    }
+</script>
