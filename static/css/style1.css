@@ -1,0 +1,385 @@
+.toptable {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.toptable tr td {
+  border: none;
+  padding: 2px;
+  vertical-align: center;
+}
+
+.toptable tr td:first-child {
+  text-align: center;
+  width: 8%;
+}
+.toptable form {
+  margin: 0px;
+}
+.form-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 9px 10px;
+  padding-right: 3px;
+  border-radius: 30px;
+  font-size: 16px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+  margin-right: 0px;
+  width: 100%;
+}
+
+.form-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+  margin-left: 0px;
+  border: none;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.form-plus {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+  background-color: #d2fdd8;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+  margin-left: 0px;
+  border: none;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.home-btn {
+  display: inline-block;
+  background-color: #4caf50;
+  color: #fff;
+  padding: 10px 9px;
+  border-radius: 50%;
+  text-decoration: none;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.home-btn:hover {
+  background-color: #3e8e41;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.form-plus i.fas.fa-minus {
+  margin-left: 1px;
+}
+
+#checkbox1-label,
+#checkbox2-label,
+#checkbox3-label {
+  font-size: 16px;
+}
+
+.memo {
+  border: none;
+  background-color: transparent;
+}
+.container_memo {
+  display: inline-block;
+}
+.showsb {
+  background-color: #bde2f7;
+  border: none;
+  border-radius: 10px;
+}
+
+.hidesb {
+  background-color: #eaf7bd;
+  border: none;
+  border-radius: 10px;
+  font-style: italic;
+}
+
+/* 팝업 스타일 */
+#loading-popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.back-btn {
+  border: none;
+  box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);
+  margin-right: 10px;
+  font-size: large;
+}
+
+.node-btn {
+  background-color: #e9e7ff7a;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 3px;
+}
+
+.cir-btn {
+  background-color: #c2ffd1;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 3px;
+  font-weight: bold;
+  box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);
+}
+
+.circuit-btn {
+  white-space: normal;
+  border: none;
+  display: inline-block;
+  padding: 8px 8px;
+  border-radius: 8px;
+  font-family: "paybooc-Light", sans-serif;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bolder;
+  transition: 0.25s;
+  cursor: pointer;
+  text-align: left;
+  text-align-last: right;
+}
+
+button.blue {
+  font-weight: bold;
+  background-color: blue;
+  color: white;
+}
+
+button.red {
+  font-weight: bold;
+  background-color: red;
+  color: white;
+}
+
+button.coming {
+  box-shadow: 0px 0px 5px 5px rgba(255, 108, 108, 0.3);
+}
+
+button.joinb {
+  box-shadow: 0px 0px 5px 5px rgba(67, 255, 83, 0.377);
+}
+
+.main_table {
+  border-collapse: collapse;
+  font-size: 14px;
+  table-layout: auto;
+  position: sticky;
+  /* fixed -> auto 변경 */
+}
+
+.main_table thead {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  position: sticky;
+  top: 0;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.main_table tbody {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  overflow-y: scroll;
+  overflow-x: scroll;
+  /* Adjust the height as needed */
+}
+
+.main_table th,
+td {
+  border: 1px solid #ddd;
+  padding: 5px;
+  text-align: left;
+}
+
+.main_table th {
+  background-color: #bde2f7;
+  font-weight: bold;
+}
+
+.main_table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.main_table td.number {
+  text-align: right;
+}
+
+.main_table td.important {
+  background-color: #ffc;
+  font-weight: bold;
+}
+
+.main_table th:nth-child(1),
+.main_table td:nth-child(1) {
+  left: 0;
+  width: 110px;
+  font-weight: bold;
+  text-align: left;
+  border-right-style: double;
+  border-right-width: medium;
+}
+
+.main_table th:nth-child(2),
+.main_table td:nth-child(2) {
+  width: 100px;
+  white-space: nowrap;
+  padding-left: 0px;
+}
+
+.main_table th:nth-child(3),
+.main_table td:nth-child(3) {
+  width: 40px;
+}
+
+.main_table th:nth-child(4),
+.main_table td:nth-child(4),
+.main_table th:nth-child(7),
+.main_table td:nth-child(7) {
+  width: 30px;
+  text-align: center;
+}
+
+.fa-plus {
+  color: rgb(0, 0, 0);
+  /* 아이콘 색상 조정 */
+}
+
+/* 780px 초과에서 적용될 스타일 */
+@media (min-width: 769px) {
+  .toptable {
+    width: 100%;
+  }
+
+  .top_div {
+    width: 100%;
+  }
+
+  .main_table {
+    width: 100%;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  body {
+    max-width: 768px;
+    /* 예시 값 */
+    margin: 0 auto;
+    /* 화면 중앙에 정렬 */
+  }
+
+  .toptable {
+    width: 768px;
+  }
+
+  .top_div {
+    width: 768px;
+  }
+
+  .main_table {
+    width: 768px;
+  }
+
+  /* 스크롤이 안보이게 하는 css */
+  .no_scroll {
+    /* IE and Edge */
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
+    width: 712px;
+  }
+
+  /* Chrome, Safari,Opera */
+  .no_scroll::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  background-image: url("x_icon.png");
+  background-size: contain;
+  display: absolute;
+  cursor: pointer;
+}
+
+input[type="search"][value]:not(
+    :placeholder-shown
+  )::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-cancel-button:active,
+input[type="search"]:hover::-webkit-search-cancel-button,
+input[type="search"]:focus::-webkit-search-cancel-button {
+  display: inline-block;
+}
+
+.popover {
+  position: absolute;
+  width: 400px;
+  padding: 5px;
+  padding-bottom: 12px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  display: none;
+}
+
+.container_memo:focus-within .popover {
+  display: block;
+}
+
+.popover .input-group {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.popover .input-group textarea {
+  flex-grow: 1;
+  margin-right: 5px;
+  font-size: x-large;
+}
+
+.popover button {
+  float: right;
+}
+
+.nored {
+  color: red;
+  font-size: large;
+  text-shadow: 2px 2px 5px #000;
+}
+
+.red {
+  color: black;
+  text-shadow: 0px;
+  font-size: large;
+}

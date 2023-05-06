@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style type="text/css">
+        #mynetwork {
+            width: 800px;
+            height: 600px;
+        }
+
+        .menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid black;
+        }
+
+        .form-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <title>Map Form</title>
+</head>
+
+<body>
+    <form class="form-container" action="map" method="get">
+        <label for="shipnum">호선:</label>
+        <select name="shipnum" id="shipnum">
+            <option value="3278">3278</option>
+            <option value="3290">3290</option>
+            <option value="3303">3303</option>
+        </select>
+        <label for="node">노드:</label>
+        <input type="text" id="node" name="node">
+        <input type="submit" value="확인">
+    </form>
+    <form id="load-mymap-form">
+        <label for="mymap-title">MyMap:</label>
+        <select name="mymap-title" id="mymap-title">
+            <!-- 여기에 데이터베이스에서 가져온 MyMap 타이틀이 들어갑니다. -->
+        </select>
+        <button type="button" id="load-mymap">불러오기</button>
+    </form>
+    <input type="text" id="title" name="title">
+    <button id="saveButton">저장</button>
+
+    <div id="force-graph"></div>
+    <div id="menu">
+        <button id="fixNode">고정/고정 해제</button>
+        <button id="deleteNode">노드 삭제</button>
+    </div>
+    <button id="simplify">간략히</button>
+    <div class="menu">
+        <label for="nodeSize">Node Size: </label>
+        <input type="number" id="nodeSize" value="5" min="1" max="50">
+        <br>
+        <label for="linkDistance">Link Distance: </label>
+        <input type="number" id="linkDistance" value="30" min="1" max="200">
+        <br>
+        <label for="nodeStrength">Node Strength: </label>
+        <input type="number" id="nodeStrength" value="-30" min="-200" max="200">
+        <br>
+        <label for="linkStrength">Link Strength: </label>
+        <input type="number" id="linkStrength" value="1" min="0" max="10" step="0.1">
+        <br>
+        <label for="autoMove">Auto Move: </label>
+        <input type="checkbox" id="autoMove" checked>
+    </div>
+</body>
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        // 서버에 MyMap 타이틀 목록을 가져오는 요청을 보냅니다.
+        fetch("/get_mymap_titles")
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    const mymapTitleSelect = document.getElementById("mymap-title");
+                    data.titles.forEach(title => {
+                        const option = document.createElement("option");
+                        option.value = title;
+                        option.textContent = title;
+                        mymapTitleSelect.appendChild(option);
+                    });
+                }
+            });
+    });
+
+
+    function ForceGraph({
+        nodes, // an iterable of node objects (typically [{id}, …])
+        links // an iterable of link objects (typically [{source, target}, …])
+    }, {
+        nodeId = d => d.id, // given d in nodes, returns a unique identifier (string)
+        nodeGroup, // given d in nodes, returns an (ordinal) value for color
+        nodeGroups, // an array of ordinal values representing the node groups
+        nodeTitle, // given d in nodes, a title string
+        nodeFill = "currentColor", // node stroke fill (if not using a group color encoding)
+        nodeStroke = "#fff", // node stroke color
+        nodeStrokeWidth = 0, // node stroke width, in pixels
+        nodeStrokeOpacity = 0, // node stroke opacity
+        nodeSize = 5, // node radius, in pixels
+        nodeStrength = -10,
+        linkSource = ({ source }) => source, // given d in links, returns a node identifier string
+        linkTarget = ({ target }) => target, // given d in links, returns a node identifier string
+        linkStroke = "#999", // link stroke color
+        linkStrokeOpacity = 0.6, // link stroke opacity
+        linkStrokeWidth = 1.5, // given d in links, returns a stroke width in pixels
+        linkStrokeLinecap = "round", // link stroke linecap
+        linkStrength = 1,
+        colors = d3.schemeTableau10, // an array of color strings, for the node groups
+        width = 1000, // outer width, in pixels
+        height = 800, // outer height, in pixels
+        invalidation, // when this promise resolves, stop the simulation
+        autoMove = true
+    } = {}) {
+        // Compute values.
+        const N = d3.map(nodes, nodeId).map(intern);
+        const LS = d3.map(links, linkSource).map(intern);
+        const LT = d3.map(links, linkTarget).map(intern);
+        if (nodeTitle === undefined) nodeTitle = (_, i) => N[i];
+        const T = nodeTitle == null ? null : d3.map(nodes, nodeTitle);
+        const G = nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
+        const W = typeof linkStrokeWidth !== "function" ? null : d3.map(links, linkStrokeWidth);
+        const L = typeof linkStroke !== "function" ? null : d3.map(links, linkStroke);
+
+        // Replace the input nodes and links with mutable objects for the simulation.
+        nodes = d3.map(nodes, (_, i) => ({ id: N[i] }));
+        links = d3.map(links, (_, i) => ({ source: LS[i], target: LT[i], distance: links[i].length }));
+        // Compute default domains.
+        if (G && nodeGroups === undefined) nodeGroups = d3.sort(G);
+        // Construct the scales.
+        const color = nodeGroup == null ? null : d3.scaleOrdinal(nodeGroups, colors);
+        // Construct the forces.
+        const forceNode = d3.forceManyBody();
+        const forceLink = d3.forceLink(links)
+            .id(({ index: i }) => N[i])
+            .distance(link => link.distance); // Use link.distance instead of links.distance
+        if (nodeStrength !== undefined) forceNode.strength(nodeStrength);
+        if (linkStrength !== undefined) forceLink.strength(linkStrength);
+        const forceCollide = d3.forceCollide(nodeSize * 2); // 충돌 회피 힘 설정
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", forceLink)
+            .force("charge", forceNode)
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .on("tick", ticked);
+        const svg = d3.create("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height])
+            .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+        const link = svg.append("g")
+            .attr("stroke", typeof linkStroke !== "function" ? linkStroke : null)
+            .attr("stroke-opacity", linkStrokeOpacity)
+            .attr("stroke-width", typeof linkStrokeWidth !== "function" ? linkStrokeWidth : null)
+            .attr("stroke-linecap", linkStrokeLinecap)
+            .selectAll("line")
+            .data(links)
+            .join("line");
+        const node = svg.append("g")
+            .selectAll("g")
+            .data(nodes)
+            .enter()
+            .append("g");
+
+        // 원을 추가하세요.
+        node.append("circle")
+            .attr("fill", nodeFill)
+            .attr("stroke", nodeStroke)
+            .attr("stroke-opacity", nodeStrokeOpacity)
+            .attr("stroke-width", nodeStrokeWidth)
+            .attr("r", nodeSize)
+            .call(drag(simulation))
+            .on("click", (event, d) => {
+                // 노드 클릭 시 고정 또는 고정 해제
+                d.fx = !d.fx ? d.x : null;
+                d.fy = !d.fy ? d.y : null;
+            });;
+
+        if (color) node.attr("fill", d => color(G.get(d.id)));
+        // 원 옆에 텍스트를 추가하세요.
+        node.append("text")
+            .attr("text-anchor", "start") // 텍스트 정렬 (왼쪽 정렬)
+            .attr("dx", nodeSize + 2) // 텍스트 위치 조정 (원의 오른쪽으로 이동)
+            .attr("dy", nodeSize + 2) // 텍스트 위치 조정 (원의 아래쪽으로 이동)
+            .attr("fill", "black") // 텍스트 색상
+            .attr("font-size", "10px") // 텍스트 크기 설정
+            .text(({ index: i }) => T[i]); // 텍스트 내용 설정
+        if (W) link.attr("stroke-width", ({ index: i }) => W[i]);
+        if (L) link.attr("stroke", ({ index: i }) => L[i]);
+        if (G) node.attr("fill", ({ index: i }) => color(G[i]));
+        if (T) node.append("title").text(({ index: i }) => T[i]);
+        if (invalidation != null) invalidation.then(() => simulation.stop());
+        function intern(value) {
+            return value !== null && typeof value === "object" ? value.valueOf() : value;
+        }
+        simulation.on("tick", ticked);
+        function ticked() {
+            const padding = nodeSize + 2; // 화면과 노드 사이의 여백 지정
+
+            // 노드의 위치를 클립하여 화면 내에 놓기
+            node.each(function (d) {
+                d.x = Math.max(padding, Math.min(width - padding, d.x));
+                d.y = Math.max(padding, Math.min(height - padding, d.y));
+            });
+
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("transform", d => `translate(${d.x},${d.y})`); // 노드 그룹의 위치 설정
+        }
+
+
+        function drag(simulation) {
+            function dragstarted(event) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+            }
+
+            function dragged(event) {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
+
+            function dragended(event) {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+            }
+
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        }
+        return Object.assign(svg.node(), { scales: { color } });
+    }
+
+    // nodes와 edges 데이터를 JSON 형식으로 변환합니다.
+    var nodesData = JSON.parse('{{nodes|safe}}');
+    var edgesData = JSON.parse('{{edges|safe}}');
+
+
+    // nodesData에서 id 속성을 추출하여 새로운 nodes 배열을 생성합니다.
+    var nodes = nodesData.map(node => {
+        return {
+            id: node.id,
+            nodeTitle: node.label
+        };
+    });
+
+    // edgesData에서 필요한 속성들을 추출하여 새로운 links 배열을 생성합니다.
+    var links = edgesData.map(edge => {
+        return {
+            source: edge[0],
+            target: edge[1],
+            length: edge[2] * 10
+        };
+    });
+    const settings = {
+        nodeSize: 5,
+        linkDistance: 30,
+        nodeStrength: -10,
+        linkStrength: 1,
+        autoMove: true
+    };
+    // ForceGraph 호출
+    const forceGraph = ForceGraph({ nodes, links });
+    document.querySelector('#force-graph').appendChild(forceGraph);
+
+    // UI 요소에 이벤트 리스너를 추가하여 사용자 입력에 따라 설정을 업데이트합니다.
+    document.getElementById("nodeSize").addEventListener("input", (event) => {
+        settings.nodeSize = parseFloat(event.target.value);
+        updateGraph();
+    });
+
+    document.getElementById("linkDistance").addEventListener("input", (event) => {
+        settings.linkDistance = parseFloat(event.target.value);
+        updateGraph();
+    });
+
+    document.getElementById("nodeStrength").addEventListener("input", (event) => {
+        settings.nodeStrength = parseFloat(event.target.value);
+        updateGraph();
+    });
+
+    document.getElementById("linkStrength").addEventListener("input", (event) => {
+        settings.linkStrength = parseFloat(event.target.value);
+        updateGraph();
+    });
+
+    document.getElementById("autoMove").addEventListener("change", (event) => {
+        settings.autoMove = event.target.checked;
+        updateGraph();
+    });
+
+    // 그래프를 업데이트하는 함수를 작성합니다.
+    function updateGraph() {
+        // 그래프를 다시 그리기 전에 기존 그래프를 제거합니다.
+        d3.select("svg").remove()
+
+        // ForceGraph 함수를 호출하고 새 설정을 적용합니다.
+        const forceGraph = ForceGraph({
+            nodes: nodes,
+            links: links
+        }, {
+            nodeSize: settings.nodeSize,
+            linkDistance: settings.linkDistance,
+            nodeStrength: settings.nodeStrength,
+            linkStrength: settings.linkStrength,
+            autoMove: settings.autoMove
+        });
+        console.log(settings)
+
+        document.querySelector('#force-graph').appendChild(forceGraph);
+    }
+
+</script>
+
+</html>

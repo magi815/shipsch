@@ -1,0 +1,14 @@
+2023-03-26 12:18:16,083 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/3303/filter?cir=A-AD&node=&type=&block=
+2023-03-26 12:18:39,926 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/3303/filter?cir=A-BC&node=&type=&block=
+2023-03-26 12:19:04,534 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/3303/filter?cir=gd&node=&type=&block=
+2023-03-26 12:20:50,417 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/3303/filter?cir=A-BC7-7&node=&type=&block=
+2023-03-26 12:20:50,417 - INFO - New IP 127.0.0.1 has accessed the site!
+2023-03-26 12:20:52,465 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/
+2023-03-26 12:26:24,868 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/3303/
+2023-03-26 12:34:19,223 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/
+2023-03-26 12:34:33,576 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/
+2023-03-26 12:38:00,303 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/
+2023-03-28 21:19:32,701 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - None
+2023-03-28 22:36:55,844 - INFO - 127.0.0.1 - Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Mobile Safari/537.36 - http://127.0.0.1:8000/3303/
+2023-03-28 22:38:47,210 - INFO - 127.0.0.1 - Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Mobile Safari/537.36 - http://127.0.0.1:8000/
+2023-04-04 22:54:50,246 - INFO - 127.0.0.1 - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 - http://127.0.0.1:8000/3303/filter?cir=&node=E2AS2236&type=&block=E52P0+

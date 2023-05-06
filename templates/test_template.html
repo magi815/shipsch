@@ -1,0 +1,790 @@
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <title>{{ shipnum }}</title>
+    <style>
+        .showsb {
+            background-color: #bde2f7;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .hidesb {
+            background-color: #eaf7bd;
+            border: none;
+            border-radius: 10px;
+            font-style: italic;
+
+        }
+
+        /* 팝업 스타일 */
+        #loading-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .back-btn {
+            border: none;
+            box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);
+            margin-right: 10px
+        }
+
+        .node-btn {
+            background-color: #e9e7ff7a;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 3px;
+        }
+
+        .cir-btn {
+            background-color: #c2ffd1;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 3px;
+            font-weight: bold;
+            box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);
+        }
+
+        .circuit-btn {
+            white-space: normal;
+            border: none;
+            display: inline-block;
+            padding: 8px 8px;
+            border-radius: 8px;
+            font-family: "paybooc-Light", sans-serif;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bolder;
+            transition: 0.25s;
+            cursor: pointer;
+            text-align: left;
+            text-align-last: right;
+        }
+
+        button.blue {
+            font-weight: bold;
+            background-color: blue;
+            color: white;
+        }
+
+        button.red {
+            font-weight: bold;
+            background-color: red;
+            color: white;
+        }
+
+        button.coming {
+            box-shadow: 0px 0px 5px 5px rgba(255, 108, 108, 0.3);
+        }
+
+        button.joinb {
+            box-shadow: 0px 0px 5px 5px rgba(67, 255, 83, 0.377);
+        }
+
+        .main_table {
+            border-collapse: collapse;
+            font-size: 14px;
+            table-layout: auto;
+            position: sticky;
+            /* fixed -> auto 변경 */
+        }
+
+        .main_table thead {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            position: sticky;
+            top: 0;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .main_table tbody {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            overflow-y: scroll;
+            overflow-x: scroll;
+            /* Adjust the height as needed */
+        }
+
+
+        .main_table th,
+        td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: left;
+        }
+
+        .main_table th {
+            background-color: #bde2f7;
+            font-weight: bold;
+        }
+
+        .main_table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .main_table td.number {
+            text-align: right;
+        }
+
+        .main_table td.important {
+            background-color: #ffc;
+            font-weight: bold;
+        }
+
+        .main_table th:nth-child(1),
+        .main_table td:nth-child(1) {
+            left: 0;
+            width: 110px;
+            font-weight: bold;
+        }
+
+        .main_table th:nth-child(2),
+        .main_table td:nth-child(2) {
+            width: 100px;
+        }
+
+        .main_table th:nth-child(3),
+        .main_table td:nth-child(3) {
+            width: 40px;
+        }
+
+
+        .main_table th:nth-child(4),
+        .main_table td:nth-child(4),
+        .main_table th:nth-child(7),
+        .main_table td:nth-child(7) {
+            width: 30px;
+            text-align: center;
+
+        }
+
+
+        .form-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 9px 20px;
+            border-radius: 30px;
+            font-size: 16px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+            margin-right: 0px;
+            width: 170px;
+        }
+
+        .form-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+            margin-left: 0px;
+            border: none;
+            display: inline-block;
+            cursor: pointer;
+
+        }
+
+        .form-plus {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #d2fdd8;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+            margin-left: 0px;
+            border: none;
+            display: inline-block;
+            cursor: pointer;
+
+        }
+
+
+
+        .toptable tr td {
+            border-collapse: collapse;
+            border: none;
+            vertical-align: center;
+            padding: 2px;
+        }
+
+        .home-btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 9px;
+            border-radius: 50%;
+            text-decoration: none;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .home-btn:hover {
+            background-color: #3E8E41;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .fa-plus {
+            color: rgb(0, 0, 0);
+            /* 아이콘 색상 조정 */
+        }
+
+        /* 780px 초과에서 적용될 스타일 */
+        @media (min-width: 769px) {
+            .toptable {
+                width: 100%;
+            }
+
+            .top_div {
+
+                width: 100%;
+            }
+
+            .main_table {
+                width: 100%;
+            }
+        }
+
+        @media only screen and (max-width: 768px) {
+            body {
+                max-width: 768px;
+                /* 예시 값 */
+                margin: 0 auto;
+                /* 화면 중앙에 정렬 */
+            }
+
+            .toptable {
+                width: 768px;
+            }
+
+            .top_div {
+
+                width: 768px;
+            }
+
+            .main_table {
+                width: 768px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 페이지 로딩중 팝업 -->
+    <div id="loading-popup">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff;">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+        </div>
+    </div>
+    <table class="toptable">
+        <tr>
+            <td rowspan="2">
+                <a href="/test" class="home-btn"><i class="fas fa-home"></i></a>
+            </td>
+            <td rowspan="2">
+
+                <form method="GET" action="filter" style="margin-bottom:1px" onsubmit="showLoadingPopup()">
+                    <input type="text" name="cir" id="input_cir" class="form-input" placeholder="Circuit">
+                    <input type="text" name="node" id="input_node" class="form-input" placeholder="Node">
+                    {% if type %}
+                    <input type="text" name="type" id="input_type" class="form-input" placeholder="Type">
+                    {% else %}
+                    <input type="text" name="type" id="input_type" class="form-input" placeholder="Type"
+                        style="display: none;">
+                    {% endif %}
+                    <button type="submit" class="form-submit"><i class="fas fa-search"></i></button>
+                </form>
+
+            </td>
+            <td rowspan="2"><button class="form-plus" onclick="plusbtnclick(this)">
+                    {% if type %}
+                    <i class="fas fa-minus"></i>
+                    {% else %}
+                    <i class="fas fa-plus"></i>
+                    {% endif %}
+                </button>
+            </td>
+            <td>
+                <input type="checkbox" id="checkbox1" name="checkbox1"
+                    style="box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);">
+                <label for="checkbox1" id="checkbox1-label">Hide Block</label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="checkbox" id="checkbox2" name="checkbox2"
+                    style="box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);">
+                <label for="checkbox2" id="checkbox2-label">Hide Node</label>
+            </td>
+        </tr>
+    </table>
+    <div class="top_div" style="display: flex;justify-content: space-between;align-items: center;">
+        {% if cir or node or type%}
+        {% if cir %}
+        Circuit : {{cir}}
+        {% endif %}&nbsp;&nbsp;&nbsp;
+        {% if node %}
+        Node : {{node}}&nbsp;&nbsp;&nbsp;
+        {% endif %}
+        {% if type %}
+        Type : {{type}}
+        {% endif %}
+        {% else %}
+        검색할 Circuit 또는 Node 또는 Type(+)를 입력하세요.
+        {% endif %}
+        <div style="margin-left: auto;">
+            <i id="sbsbutton" onclick="sbsbutton(this)" style="font-size:21px;margin-right: 38px;"
+                class="fas fa-caret-down"></i>
+        </div>
+    </div>
+    <div class="top_div" id="setblocks" style="display:none;">
+        {% for i in sbs %}
+        <button id='{{ i }}' name="heresetblocks" onclick="sbsfilter(this,id)" class="showsb">{{ i }}</button>
+        {% endfor %}
+    </div>
+    <table class="main_table">
+        <thead>
+            <tr>
+                <th style="text-align: left; white-space:nowrap;"><span id="count">0</span> /
+                    <span>{{len}}</span><br><span id="weight"></span>
+                </th>
+                <th>Type / Set</th>
+                <th>길이</th>
+                <th></th>
+                <th style="text-align: center;">From</th>
+                <th style="text-align: center;">To</th>
+                <th></th>
+                <!-- 다른 컬럼 이름도 추가 -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in data.iterrows %}
+            {% if index < 200 %} <tr name='{{ row.SETBlock }}'>
+                <td style="text-align: left;border-right-style: double;border-right-width: medium;" rowspan=" 3">
+                    <button id='{{row.Circuit}}_circuit' onclick="toggle(this, id)" class="circuit-btn">
+                        {{row.Circuit }}
+                    </button>
+                </td>
+                <td>
+                    {{ row.CableType }}
+                    {% if row.가닥수 > 1 %}
+                    <b style="color:red">
+                        x {{ row.가닥수|floatformat:"-1" }}
+                    </b>
+                    {% endif %}
+                </td>
+                <td id='{{row.Circuit}}_totallength'>
+                    {{ row.길이|floatformat:"-1" }} </td>
+                <td style="text-align: right;" id='{{row.Circuit}}_FromLength'>{{ row.FromLength }}</td>
+                <td id='{{row.Circuit}}_FromEquipment' style="font-size:small">{{ row.FromEquipment }}</td>
+                <td id='{{row.Circuit}}_ToEquipment' style="font-size:small">{{ row.ToEquipment }}</td>
+                <td style="text-align: left;" id='{{row.Circuit}}_ToLength'>{{ row.ToLength }}</td>
+                <!-- 다른 컬럼도 추가 -->
+                </tr>
+                <tr name='{{ row.SETBlock }}'>
+
+                    <td style="text-align: left;" colspan="6" id='{{row.Circuit}}__BlockPATH'>
+                        <span
+                            style="background-color: #ff00cd2b;border: none;border-radius: 8px;padding: 4px;margin-right: 6px;padding-left: 7px;">
+                            {{ row.SETBlock }}
+                        </span>
+
+                        <span id='{{row.Circuit}}_BlockPATH'>
+                            {{ row.BlockPATH }}
+                        </span>
+                    </td>
+                    <!-- 다른 컬럼도 추가 -->
+                </tr>
+                <tr name='{{ row.SETBlock }}' style="border-bottom-style: double;">
+                    <td colspan="6" style="text-align: left;" id='{{row.Circuit}}__NodePATH'>
+                        <span id='{{row.Circuit}}_node3' style="display:none">
+                            <button id='{{row.Circuit}}_back' onclick="originpath(this,id)"
+                                class="back-btn">&#x21A9;</button>
+
+                        </span>
+                        <span id='{{row.Circuit}}_node'></span>
+                        <span id='{{row.Circuit}}_node2'>
+                            {% if row.NodePATH %}
+                            {% for i in row.NodePATH.split %}
+                            {% if "-" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen_cir(this, id)" class="cir-btn">
+                                {{ i }}</button>
+                            {% elif i == node|upper %}
+                            {% if i|slice:"-1:" in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue joinb coming">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue coming">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% else %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue joinb">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% endif %}
+                            {% else %}
+                            {% if i|slice:"-1:" in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn joinb coming">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn coming">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% else %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn joinb">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% endif %}
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </span>
+
+                    </td>
+                    <!-- 다른 컬럼도 추가 -->
+                </tr>
+
+                {% elif index == 200 %}
+                <tr>
+                    <td>200개이상 생략됨.</td>
+                    <td colspan="6" style="text-align: left;">
+
+                    </td>
+                    <!-- 다른 컬럼도 추가 -->
+                </tr>
+                {{break}}
+
+                {% endif %}
+                {% endfor %}
+        </tbody>
+    </table>
+</body>
+<script>
+    function sbsfilter(btn, id) {
+        if (btn.classList.contains('showsb')) {
+            btn.classList.remove('showsb');
+            btn.classList.add('hidesb');
+            document.querySelectorAll("[name=" + btn.innerText + "]").forEach(elem => elem.style.display = "none");
+        }
+        else {
+
+            btn.classList.remove('hidesb');
+            btn.classList.add('showsb');
+            document.querySelectorAll("[name=" + btn.innerText + "]").forEach(elem => elem.style.display = "");
+        }
+
+    }
+    function sbsbutton(btn) {
+        if (btn.classList.contains('fa-caret-down')) {
+            document.getElementById('setblocks').style.display = "block"
+            btn.classList.remove('fa-caret-down');
+            btn.classList.add('fa-caret-up');
+        }
+        else {
+            document.getElementById('setblocks').style.display = "none"
+            btn.classList.remove('fa-caret-up');
+            btn.classList.add('fa-caret-down');
+        }
+    }
+    function showLoadingPopup() {
+        document.querySelector('meta[name="viewport"]').setAttribute('content', 'initial-scale=0.5');
+        document.getElementById("loading-popup").style.display = "block";
+        // 로딩 팝업을 표시하는 동안 페이지가 언로드 되지 않도록 이벤트 리스너를 추가합니다.
+        window.addEventListener("pageshow", hideLoadingPopup);
+    }
+
+    function hideLoadingPopup() {
+        document.getElementById("loading-popup").style.display = "none";
+        document.getElementById('input_type').value = ''
+        document.getElementById('input_cir').value = ''
+        document.getElementById('input_node').value = ''
+    }
+
+    const cb1 = document.getElementById('checkbox1');
+    const cb1Label = document.getElementById('checkbox1-label');
+    const cb2 = document.getElementById('checkbox2');
+    const cb2Label = document.getElementById('checkbox2-label');
+
+    [cb1, cb2].forEach(cb => {
+        cb.addEventListener('click', () => {
+            const target = cb === cb1 ? 'BlockPATH' : 'NodePATH';
+            const isHide = cb.checked;
+            const display = isHide ? 'none' : '';
+
+            {% for index, row in data.iterrows %}
+            if ('{{index}}' < 200) {
+                document.getElementById('{{row.Circuit}}__' + target).style.display = display;
+            }
+            {% endfor %}
+        });
+    });
+
+    function plusbtnclick(btn) {
+        if (btn.querySelector('i').classList.contains('fa-plus')) {
+            btn.querySelector('i').classList.remove('fa-plus');
+            btn.querySelector('i').classList.add('fa-minus');
+            document.getElementById('input_type').style.display = "";
+        } else {
+            btn.querySelector('i').classList.remove('fa-minus');
+            btn.querySelector('i').classList.add('fa-plus');
+            document.getElementById('input_type').style.display = "none";
+        }
+    }
+    let count = 0;
+
+    function toggle(btn, cellId) {
+        //console.log('{{cir}}')  
+        if (btn.style.backgroundColor == "yellow") {
+            btn.style.backgroundColor = "";
+            count--;
+        } else {
+            btn.style.backgroundColor = "yellow";
+            count++;
+        }
+
+        document.getElementById("count").innerHTML = count;
+        var totalweight = 0;
+        var nowweight = 0;
+        var weightper = 0;
+        var makercount = 0;
+        {% for index, row in data.iterrows %}
+
+        if ('{{row.CableType}}'.indexOf("MAKE") == -1 && '{{row.CableType}}'.indexOf("MC") == -1) {
+
+            totalweight += '{{row.단위중량}}' * 1;
+            if (document.getElementById('{{row.Circuit}}_circuit').style.backgroundColor == "yellow") {
+                nowweight += '{{row.단위중량}}' * 1;
+            }
+        }
+        else {
+            makercount++
+        }
+        {% endfor %}
+        if (totalweight > 0) {
+            weightper = Math.round(nowweight / totalweight * 100);
+        }
+        if (makercount > 0) {
+            document.getElementById("weight").innerHTML = '<div id="popup_text" onclick="hidepopup(this)" style="display:none;position:absolute;background-color: white;position: absolute;padding: 10px 10px;border-radius: 10px;box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);margin-left: 80px;">Maker 케이블제외 전로용량</div><div onclick="showpopup_1()">전로(' + weightper + '%)<br>Maker :' + makercount + '개</div>';
+        }
+        else {
+            document.getElementById("weight").innerHTML = "<div>전로(" + weightper + "%)</div>";
+        }
+
+
+    }
+
+    function hidepopup(btn) {
+        btn.style.display = "none"
+    }
+
+    function showpopup_1() {
+        document.getElementById("popup_text").style.display = ""
+    }
+    function callen_cir(btn, cellId) {
+        document.getElementById('input_cir').value = btn.innerText
+    }
+    function callen(btn, cellId) {
+        if (btn.innerText.indexOf("-") == -1) {
+            document.getElementById('input_node').value = btn.innerText
+
+        }
+        else {
+            document.getElementById('input_cir').value = btn.innerText
+
+        }
+        var buttons = document.getElementsByName(cellId.split("_")[0]);
+
+        var redbtn = []
+        for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i].classList.contains('red') || buttons[i].classList.contains('blue')) {
+                redbtn.push(i)
+            }
+        }
+        switch (redbtn.length) {
+            case 0: arguments
+                btn.classList.add('blue')
+                //btn.style.backgroundColor = "blue";
+                //btn.style.color = "white"
+                break;
+            case 1: arguments
+                if (btn.classList.contains('blue')) {
+                    btn.classList.remove('blue');
+                    //btn.style.backgroundColor = "";
+                    //btn.style.color = "black"
+
+                } else {
+                    btn.classList.add('red')
+                    //btn.style.backgroundColor = "red";
+                    //btn.style.color = "white"
+                }
+                break;
+            case 2: arguments
+
+                for (var i = 0; i < buttons.length; i++) {
+                    buttons[i].classList.remove('blue');
+                    buttons[i].classList.remove('red');
+                }
+                break;
+        }
+        redbtn = []
+        var countbtn = 0;
+        for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i].classList.contains('red') || buttons[i].classList.contains('blue')) {
+                redbtn.push(i)
+                countbtn++
+            }
+        }
+        if (countbtn == 2) {
+
+            {% for index, row in data.iterrows %}
+            if ('{{index}}' < 200) {
+                if ('{{ row.Circuit }}' == cellId.split("_")[0]) {
+                    a = '{{ row.길이Node }}'
+                    b = buttons[redbtn[0]].innerText;
+                    c = buttons[redbtn[1]].innerText;
+                    split_a = a.split(" ")
+                    if (a.indexOf(b) !== -1 && a.indexOf(c) !== -1 && a.indexOf(")-T       ") !== -1) {
+                        let firstVal = parseFloat(a.substring(a.indexOf(")-T       ") - 7, a.indexOf(")-T       ")));
+                        let secondVal = parseFloat(a.substring(a.indexOf(c) - 9, a.indexOf(c) - 2));
+                        let thirdVal = parseFloat(a.substring(a.indexOf(b) - 9, a.indexOf(b) - 2));
+                        if (a.indexOf(b) <= a.indexOf(c)) {
+                            fr = Math.round((thirdVal) * 100) / 100;
+                            to = Math.round((firstVal - secondVal) * 100) / 100;
+                            ct = Math.round((secondVal - thirdVal) * 100) / 100;
+                            total = Math.round((fr + to + ct) * 100) / 100
+                        } else {
+                            fr = Math.round((firstVal - thirdVal) * 100) / 100;
+                            to = Math.round((secondVal) * 100) / 100;
+                            ct = Math.round((thirdVal - secondVal) * 100) / 100;
+                            total = Math.round((fr + to + ct) * 100) / 100
+                        }
+                    }
+                    else {
+                        fr = "N";
+                        to = "N";
+                        ct = "N";
+                        total = 0
+                    }
+                    if (document.getElementById(cellId.split("_")[0] + '_totallength').innerText > total + 1) {
+                        document.getElementById(cellId.split("_")[0] + '_totallength').bgColor = "blue"
+                        document.getElementById(cellId.split("_")[0] + '_totallength').style.color = "white"
+                    } else if (document.getElementById(cellId.split("_")[0] + '_totallength').innerText < total) {
+                        document.getElementById(cellId.split("_")[0] + '_totallength').bgColor = "red"
+                        document.getElementById(cellId.split("_")[0] + '_totallength').style.color = "white"
+                    }
+                    document.getElementById(cellId.split("_")[0] + '_totallength').innerText += " / " + total
+
+                    if (buttons[redbtn[0]].classList.contains('blue')) {
+                        nodeLength = fr + "  <button  class='node-btn'>" + b + "</button>  " + ct + "  <button class='node-btn'>" + c + "</button>  " + to
+                    }
+                    else {
+                        nodeLength = to + "  <button class='node-btn'>" + c + "</button>  " + ct + "  <button class='node-btn'>" + b + "</button>  " + fr
+
+
+                        var fl = document.getElementById(cellId.split("_")[0] + '_FromLength').innerText
+                        var fe = document.getElementById(cellId.split("_")[0] + '_FromEquipment').innerText
+                        var tl = document.getElementById(cellId.split("_")[0] + '_ToLength').innerText
+                        var te = document.getElementById(cellId.split("_")[0] + '_ToEquipment').innerText
+                        var bp = document.getElementById(cellId.split("_")[0] + '_BlockPATH').innerText
+
+                        document.getElementById(cellId.split("_")[0] + '_FromLength').innerText = tl;
+                        document.getElementById(cellId.split("_")[0] + '_FromEquipment').innerText = te;
+                        document.getElementById(cellId.split("_")[0] + '_ToLength').innerText = fl;
+                        document.getElementById(cellId.split("_")[0] + '_ToEquipment').innerText = fe;
+
+                        bpsplit = bp.split(" ")
+                        bpsplit = bpsplit.reverse()
+                        txt = " "
+                        for (var i = 0; i < bpsplit.length; i++) {
+                            txt = txt + "" + bpsplit[i] + " "
+                        }
+                        document.getElementById(cellId.split("_")[0] + '_BlockPATH').innerText = txt;
+
+
+                    }
+                    buttons[redbtn[0]].classList.remove('blue')
+                    buttons[redbtn[0]].classList.remove('red')
+                    buttons[redbtn[1]].classList.remove('blue')
+                    buttons[redbtn[1]].classList.remove('red')
+                    for (var i = 0; i < buttons.length; i++) {
+                        if (buttons[i].innerText == '{{ node|upper }}') {
+                            buttons[i].classList.add('blue')
+                        }
+                    }
+
+                }
+            }
+            {% endfor %}
+            document.getElementById(cellId.split("_")[0] + '_node').innerHTML = nodeLength;
+            document.getElementById(cellId.split("_")[0] + '_node').style.fontWeight = "bold";
+            document.getElementById(cellId.split("_")[0] + '_node').style.display = "inline";
+            document.getElementById(cellId.split("_")[0] + '_node2').style.display = "none";
+            document.getElementById(cellId.split("_")[0] + '_node3').style.display = "inline";
+        }
+        //document.getElementById("count").innerHTML = countbtn;
+    }
+    function originpath(btn, cellId) {
+        document.getElementById(cellId.split("_")[0] + '_node').style.display = "none";
+        document.getElementById(cellId.split("_")[0] + '_node2').style.display = "inline";
+        document.getElementById(cellId.split("_")[0] + '_node3').style.display = "none";
+        document.getElementById(cellId.split("_")[0] + '_node2').style.display = "inline";
+
+        {% for index, row in data.iterrows %}
+        if ('{{index}}' < 200) {
+            if ('{{ row.Circuit }}' == cellId.split("_")[0]) {
+
+                document.getElementById(cellId.split("_")[0] + '_FromLength').innerHTML = '{{ row.FromLength }}';
+                document.getElementById(cellId.split("_")[0] + '_FromEquipment').innerHTML = '{{ row.FromEquipment }}';
+                document.getElementById(cellId.split("_")[0] + '_ToLength').innerHTML = '{{ row.ToLength }}';
+                document.getElementById(cellId.split("_")[0] + '_ToEquipment').innerHTML = '{{ row.ToEquipment}}';
+                document.getElementById(cellId.split("_")[0] + '_BlockPATH').innerHTML = '{{ row.BlockPATH }}';
+                document.getElementById(cellId.split("_")[0] + '_totallength').innerHTML = '{{ row.총길이|floatformat:"-1" }}';
+                document.getElementById(cellId.split("_")[0] + '_totallength').bgColor = "white"
+                document.getElementById(cellId.split("_")[0] + '_totallength').style.color = "black"
+            }
+        }
+        {% endfor %}
+    }
+</script>
+
+</html>

@@ -1,0 +1,1224 @@
+{% load static %}
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>{{ shipnum }}</title>
+    <style>
+        .memo {
+            border: none;
+            background-color: transparent;
+        }
+
+        .showsb {
+            background-color: #bde2f7;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .hidesb {
+            background-color: #eaf7bd;
+            border: none;
+            border-radius: 10px;
+            font-style: italic;
+
+        }
+
+        /* 팝업 스타일 */
+        #loading-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .back-btn {
+            border: none;
+            box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);
+            margin-right: 10px
+        }
+
+        .node-btn {
+            background-color: #e9e7ff7a;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 3px;
+        }
+
+        .cir-btn {
+            background-color: #c2ffd1;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 3px;
+            font-weight: bold;
+            box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);
+        }
+
+        .circuit-btn {
+            white-space: normal;
+            border: none;
+            display: inline-block;
+            padding: 8px 8px;
+            border-radius: 8px;
+            font-family: "paybooc-Light", sans-serif;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bolder;
+            transition: 0.25s;
+            cursor: pointer;
+            text-align: left;
+            text-align-last: right;
+        }
+
+        button.blue {
+            font-weight: bold;
+            background-color: blue;
+            color: white;
+        }
+
+        button.red {
+            font-weight: bold;
+            background-color: red;
+            color: white;
+        }
+
+        button.coming {
+            box-shadow: 0px 0px 5px 5px rgba(255, 108, 108, 0.3);
+        }
+
+        button.joinb {
+            box-shadow: 0px 0px 5px 5px rgba(67, 255, 83, 0.377);
+        }
+
+        .main_table {
+            border-collapse: collapse;
+            font-size: 14px;
+            table-layout: auto;
+            position: sticky;
+            /* fixed -> auto 변경 */
+        }
+
+        .main_table thead {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            position: sticky;
+            top: 0;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .main_table tbody {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            overflow-y: scroll;
+            overflow-x: scroll;
+            /* Adjust the height as needed */
+        }
+
+
+        .main_table th,
+        td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: left;
+        }
+
+        .main_table th {
+            background-color: #bde2f7;
+            font-weight: bold;
+        }
+
+        .main_table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+
+        .main_table td.number {
+            text-align: right;
+        }
+
+        .main_table td.important {
+            background-color: #ffc;
+            font-weight: bold;
+        }
+
+        .main_table th:nth-child(1),
+        .main_table td:nth-child(1) {
+            left: 0;
+            width: 110px;
+            font-weight: bold;
+        }
+
+        .main_table th:nth-child(2),
+        .main_table td:nth-child(2) {
+            width: 100px;
+        }
+
+        .main_table th:nth-child(3),
+        .main_table td:nth-child(3) {
+            width: 40px;
+        }
+
+
+        .main_table th:nth-child(4),
+        .main_table td:nth-child(4),
+        .main_table th:nth-child(7),
+        .main_table td:nth-child(7) {
+            width: 30px;
+            text-align: center;
+
+        }
+
+
+        .form-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 9px 10px;
+            padding-right: 3px;
+            border-radius: 30px;
+            font-size: 16px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+            margin-right: 0px;
+            width: 170px;
+        }
+
+        .form-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+            margin-left: 0px;
+            border: none;
+            display: inline-block;
+            cursor: pointer;
+
+        }
+
+        .form-plus {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #d2fdd8;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+            margin-left: 0px;
+            border: none;
+            display: inline-block;
+            cursor: pointer;
+
+        }
+
+
+
+        .toptable tr td {
+            border-collapse: collapse;
+            border: none;
+            vertical-align: center;
+            padding: 2px;
+        }
+
+        .home-btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 9px;
+            border-radius: 50%;
+            text-decoration: none;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .home-btn:hover {
+            background-color: #3E8E41;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .fa-plus {
+            color: rgb(0, 0, 0);
+            /* 아이콘 색상 조정 */
+        }
+
+        /* 780px 초과에서 적용될 스타일 */
+        @media (min-width: 769px) {
+            .toptable {
+                width: 100%;
+            }
+
+            .top_div {
+
+                width: 100%;
+            }
+
+            .main_table {
+                width: 100%;
+            }
+        }
+
+        @media only screen and (max-width: 768px) {
+            body {
+                max-width: 768px;
+                /* 예시 값 */
+                margin: 0 auto;
+                /* 화면 중앙에 정렬 */
+            }
+
+            .toptable {
+                width: 768px;
+            }
+
+            .top_div {
+
+                width: 768px;
+            }
+
+            .main_table {
+                width: 768px;
+            }
+
+            /* 스크롤이 안보이게 하는 css */
+            .no_scroll {
+                /* IE and Edge */
+                -ms-overflow-style: none;
+                /* Firefox */
+                scrollbar-width: none;
+                width: 712px;
+            }
+
+            /* Chrome, Safari,Opera */
+            .no_scroll::-webkit-scrollbar {
+                display: none !important;
+            }
+        }
+
+        input[type="search"]::-webkit-search-cancel-button {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            background-image: url('{% static "x_icon.png" %}');
+            background-size: contain;
+            display: absolute;
+            cursor: pointer;
+        }
+
+        input[type="search"]::-webkit-search-cancel-button {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            background-image: url('{% static "x_icon.png" %}');
+            background-size: contain;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        input[type="search"][value]:not(:placeholder-shown)::-webkit-search-cancel-button,
+        input[type="search"]::-webkit-search-cancel-button:active,
+        input[type="search"]:hover::-webkit-search-cancel-button,
+        input[type="search"]:focus::-webkit-search-cancel-button {
+            display: inline-block;
+        }
+
+        .popover {
+            position: absolute;
+            width: 400px;
+            padding: 5px;
+            padding-bottom: 12px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            display: none;
+        }
+
+        .container_memo:focus-within .popover {
+            display: block;
+        }
+
+        .popover .input-group {
+            display: flex;
+            margin-bottom: 5px;
+        }
+
+        .popover .input-group textarea {
+            flex-grow: 1;
+            margin-right: 5px;
+            font-size: x-large;
+        }
+
+        .popover button {
+            float: right;
+        }
+
+        .nored {
+            color: red;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        .red {
+            color: black;
+            text-shadow: 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 페이지 로딩중 팝업 -->
+    <div id="loading-popup">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff;">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+        </div>
+    </div>
+    <table class="toptable">
+        <tr>
+            <td rowspan="2" style="text-align: center;width:8%">
+                <a href="/" class="home-btn"><i class="fas fa-home"></i></a>
+            </td>
+            <td rowspan="2">
+
+                <form method="GET" action="filter" style="margin-bottom:1px" onsubmit="showLoadingPopup()">
+                    <input type="search" name="cir" id="input_cir" class="form-input" placeholder="Circuit">
+                    <input type="search" name="node" id="input_node" class="form-input" placeholder="Node">
+                    {% if type or block %}
+                    <input type="search" name="type" id="input_type" class="form-input" placeholder="Type">
+                    <input type="search" name="block" id="input_block" class="form-input" placeholder="SetBlock">
+                    {% else %}
+                    <input type="search" name="type" id="input_type" class="form-input" placeholder="Type"
+                        style="display: none;">
+                    <input type="search" name="block" id="input_block" class="form-input" placeholder="SetBlock"
+                        style="display: none;">
+                    {% endif %}
+                    <button type="submit" class="form-submit" onclick="checkForm(event)"><i
+                            class="fas fa-search"></i></button>
+                </form>
+
+            </td>
+            <td rowspan="2"><button class="form-plus" onclick="plusbtnclick(this)">
+                    {% if type or block%}
+                    <i class="fas fa-minus"></i>
+                    {% else %}
+                    <i class="fas fa-plus"></i>
+                    {% endif %}
+                </button>
+            </td>
+            <td style="text-align: left;width:15%">
+                <input type="checkbox" id="checkbox1" name="checkbox1"
+                    style="box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);">
+                <label for="checkbox1" id="checkbox1-label">Block</label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="checkbox" id="checkbox2" name="checkbox2"
+                    style="box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);">
+                <label for="checkbox2" id="checkbox2-label">Node</label>
+            </td>
+        </tr>
+    </table>
+    <div class="top_div" style="display: flex;justify-content: space-between;align-items: center;">
+        {% if cir or node or type or block %}
+        {% if cir %}
+        Circuit : {{cir}}
+        {% endif %}&nbsp;&nbsp;&nbsp;
+        {% if node %}
+        Node : {{node}}&nbsp;&nbsp;&nbsp;
+        {% endif %}
+        {% if type %}
+        Type : {{type}}&nbsp;&nbsp;&nbsp;
+        {% endif %}
+        {% if block %}
+        SetBlock : {{ block }}
+        {% endif %}
+        {% else %}
+        검색조건을 입력하세요
+        {% endif %}
+        <div style="margin-left: auto;">
+            <i id="sbsbutton" onclick="sbsbutton(this)" style="font-size:21px;margin-right: 38px;"
+                class="fas fa-caret-down"></i>
+        </div>
+    </div>
+    <div class="top_div no_scroll" id="setblocks"
+        style="display: block;overflow-x: scroll;white-space: nowrap;display:none;margin:5px;margin-left: 20px;">
+        {% for key, i in sbs_count.items %}
+        <span style="text-align:center;display: inline-block">
+            <button id='{{ key }}' name="heresetblocks" onclick="sbsfilter(this,id)" class="showsb">{{ key }}</button>
+            <br>{{i}}
+        </span>
+        {% endfor %}
+        <input type="checkbox" id="sbscheck" name="sbscheck" style="height: 35px;width: 20px;" value="1" checked>
+    </div>
+    <table class="main_table">
+        <thead>
+            <tr>
+                <th style="text-align: left; white-space:nowrap;"><span id="count">{{count_checked}}</span> /
+                    <span>{{len}}</span><br><span id="weight"></span>
+                </th>
+                <th>Type / Set</th>
+                <th style="text-align:center">길이</th>
+                <th></th>
+                <th style="text-align: center;">From</th>
+                <th style="text-align: right;white-space: nowrap">
+                    {% if mode == "basic" %}
+                    <form method="GET" action="list/filter" style="margin:0px" onsubmit="showLoadingPopup()">
+                        To &nbsp;&nbsp;&nbsp;&nbsp; <button type="submit">list_mode</button>
+                    </form>
+                    {% else %}
+                    <form method="GET" action="../filter" style="margin:0px" onsubmit="showLoadingPopup()">
+                        To &nbsp;&nbsp;&nbsp;&nbsp; <button type="submit">basic</button>
+                    </form>
+                    {% endif %}
+                </th>
+                <th style="text-align: right;">
+
+                </th>
+                <!-- 다른 컬럼 이름도 추가 -->
+            </tr>
+        </thead>
+        <tbody id='maintbody'>
+            {% for index, row in data.iterrows %}
+            {% if index < showcount %} <tr name='{{ row.SETBlock }}'>
+                <td style="text-align: left;border-right-style: double;border-right-width: medium;" rowspan=" 3">
+                    {% if row.checked == 1 %}
+                    <button id='{{row.Circuit}}_circuit' onclick="toggle(this, id)" class="circuit-btn"
+                        style="background-color: yellow;">
+                        {{row.Circuit }}
+                    </button>
+                    {% else %}
+                    <button id='{{row.Circuit}}_circuit' onclick="toggle(this, id)" class="circuit-btn">
+                        {{row.Circuit }}
+                    </button>
+                    {% endif %}
+                </td>
+                <td style="white-space: nowrap;">
+                    <div class="container_memo" style="display:inline-block" tabindex="1">
+                        <button id="{{row.Circuit}}_memo" class="btn btn-primary memo">
+                            {% if row.memo.strip|length == 0 %}
+                            <i id="{{row.Circuit}}_memo_icon" class="fas fa-pencil-alt red"></i>
+                            {% else %}
+                            <i id="{{row.Circuit}}_memo_icon" class="fas fa-pencil-alt nored"></i>
+                            {% endif %}
+                        </button>
+                        <div id="{{row.Circuit}}_memopopover" class="popover">
+                            <div class="input-group">
+
+                                <textarea type="text" placeholder="메모할 내용 입력"
+                                    oninput="autoHeight(this)">{% if row.memo %}{{ row.memo }}{% endif %}</textarea>
+                                <button>저장</button>
+                                <div style="position: absolute;right: 5px;bottom: 0;">{% if row.memodate %}
+                                    {{ row.memodate }} {% endif %}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {{ row.CableType }}
+                    {% if row.가닥수 > 1 %}
+                    <b style="color:red">
+                        x {{ row.가닥수|floatformat:"-1" }}
+                    </b>
+                    {% endif %}
+                </td>
+                <td id='{{row.Circuit}}_totallength' style="text-align:center">
+                    {{ row.길이|floatformat:"-1" }} </td>
+                <td style="text-align: right;" id='{{row.Circuit}}_FromLength'>{{ row.FromLength }}</td>
+                <td id='{{row.Circuit}}_FromEquipment' style="font-size:small">{{ row.FromEquipment }}</td>
+                <td id='{{row.Circuit}}_ToEquipment' style="font-size:small">{{ row.ToEquipment }}</td>
+                <td style="text-align: left;" id='{{row.Circuit}}_ToLength'>{{ row.ToLength }}</td>
+                <!-- 다른 컬럼도 추가 -->
+                </tr>
+                <tr name='{{ row.SETBlock }}'>
+
+                    <td style="text-align: left;" colspan="6" id='{{row.Circuit}}__BlockPATH'>
+                        <span
+                            style="background-color: #ff00cd2b;border: none;border-radius: 8px;padding: 4px;margin-right: 6px;padding-left: 7px;">
+                            {{ row.SETBlock }}
+                        </span>
+
+                        <span id='{{row.Circuit}}_BlockPATH'>
+                            {{ row.BlockPATH }}
+                        </span>
+                    </td>
+                    <!-- 다른 컬럼도 추가 -->
+                </tr>
+                <tr name='{{ row.SETBlock }}' style="border-bottom-style: double;">
+                    <td colspan="6" style="text-align: left;" id='{{row.Circuit}}__NodePATH'>
+                        <span id='{{row.Circuit}}_node3' style="display:none">
+                            <button id='{{row.Circuit}}_back' onclick="originpath(this,id)"
+                                class="back-btn">&#x21A9;</button>
+
+                        </span>
+                        <span id='{{row.Circuit}}_node'></span>
+                        <span id='{{row.Circuit}}_node2'>
+                            {% if row.NodePATH %}
+                            {% for i in row.NodePATH.split %}
+                            {% if "-" in i or "근처" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen_cir(this, id)" class="cir-btn">
+                                {{ i }}</button>
+                            {% elif i == node|upper %}
+                            {% if i|slice:"-1:" in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue joinb coming">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue coming">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% else %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue joinb">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn blue">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% endif %}
+                            {% else %}
+                            {% if i|slice:"-1:" in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn joinb coming">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn coming">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% else %}
+                            {% if "JBJ" in i %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn joinb">
+                                {{ i }}</button>
+                            {% else %}
+                            <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                onclick="callen(this, id)" class="node-btn">
+                                {{ i }}</button>
+                            {% endif %}
+                            {% endif %}
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </span>
+
+                    </td>
+                    <!-- 다른 컬럼도 추가 -->
+                </tr>
+
+                {% elif index == 200 %}
+                <tr id="showmorebtn">
+                    <td>200개이상 생략됨.</td>
+                    <td colspan="6" style="text-align: left;">
+                        <button onclick="showmore()">모두 보기</button>
+
+                    </td>
+                    <!-- 다른 컬럼도 추가 -->
+                </tr>
+                {{break}}
+
+                {% endif %}
+                {% endfor %}
+        </tbody>
+    </table>
+</body>
+<script>
+    window.onload = function () {
+        {% if type or block %}
+        document.querySelectorAll('.form-input').forEach(input => { input.style.width = '120px'; });
+        document.getElementById('input_type').style.display = "";
+        document.getElementById('input_block').style.display = "";
+        {% endif %}
+    }
+
+    $(document).on('click', '.input-group button', function () {
+        var circuit = $(this).parents('.popover').attr('id').split('_')[0];
+        var memo = $(this).siblings('textarea').val();
+        var shipnum = "{{ shipnum }}";
+        var csrf_token = "{{ csrf_token }}";
+        var date = new Date();
+        var options = { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        var koreanDateTime = date.toLocaleString('ko-KR', options);
+        $.ajax({
+            type: 'POST',
+            url: '/save_memo',
+            data: {
+                'circuit': circuit,
+                'memo': memo.trim(),
+                'shipnum': shipnum,
+                'memodate': koreanDateTime,
+                'csrfmiddlewaretoken': csrf_token
+            },
+            dataType: 'json',
+            async: false,
+            success: function (data) {
+                if (data.status === 'success') {
+                    alert(circuit + " 에 메모가 저장됨.");
+                    if (memo.trim().length > 0) {
+                        $('#' + circuit + '_memo_icon').css({
+                            'color': 'red',
+                            'box-shadow': '2px 2px 5px #888888'
+                        });
+                    } else {
+                        $('#' + circuit + '_memo_icon').css({
+                            'color': 'black',
+                            'box-shadow': 'none'
+                        });
+                    }
+                } else {
+                    alert("저장실패.");
+                }
+            },
+            error: function () {
+                alert("저장실패.");
+            }
+        });
+    });
+    function checkForm(event) {
+        const cirValue = document.getElementById('input_cir').value;
+        const nodeValue = document.getElementById('input_node').value;
+        const typeValue = document.getElementById('input_type').value;
+        const blockValue = document.getElementById('input_block').value;
+
+        if (cirValue.trim() === '' && nodeValue.trim() === '' && typeValue.trim() === '' && blockValue.trim() === '') {
+            document.getElementById('input_cir').value = ""
+            document.getElementById('input_node').value = ""
+            document.getElementById('input_type').value = ""
+            document.getElementById('input_block').value = ""
+            event.preventDefault();
+        }
+    }
+    function autoHeight(elem) {
+        elem.style.height = "1px";
+        elem.style.height = elem.scrollHeight + "px";
+    }
+    const sbscheck = document.getElementById('sbscheck');
+
+    sbscheck.addEventListener('change', function () {
+        if (sbscheck.checked) { // 체크박스가 체크되어 있으면
+            const hideSbsBtns = document.querySelectorAll('.hidesb'); // 'hidesb' 클래스를 가지는 모든 버튼 가져오기
+
+            for (let i = 0; i < hideSbsBtns.length; i++) {
+                hideSbsBtns[i].classList.remove('hidesb'); // 버튼의 'hidesb' 클래스 제거
+                hideSbsBtns[i].classList.add('showsb');
+                const name = hideSbsBtns[i].innerText; // 버튼의 name 속성 가져오기
+                const nodes = document.getElementsByName(name); // name 속성이 일치하는 모든 요소 가져오기
+                for (let j = 0; j < nodes.length; j++) {
+                    nodes[j].style.display = ''; // display 속성을 ''으로 변경
+                }
+            }
+        } else { // 체크박스가 체크되어 있지 않으면
+            const hideSbsBtns = document.querySelectorAll('.showsb'); // 'showsb' 클래스를 가지는 모든 버튼 가져오기
+            for (let i = 0; i < hideSbsBtns.length; i++) {
+                hideSbsBtns[i].classList.remove('showsb'); // 버튼의 'showsb' 클래스 제거
+                hideSbsBtns[i].classList.add('hidesb');
+                const name = hideSbsBtns[i].innerText; // 버튼의 name 속성 가져오기
+                const nodes = document.getElementsByName(name); // name 속성이 일치하는 모든 요소 가져오기
+                for (let j = 0; j < nodes.length; j++) {
+                    nodes[j].style.display = 'none'; // display 속성을 'none'으로 변경
+                }
+            }
+        }
+    });
+
+
+    let showcount = '{{ showcount }}' * 1
+    function showmore() {
+        showcount = '{{len}}' * 1
+        document.getElementById('showmorebtn').style.display = "none"
+        document.getElementById('maintbody').innerHTML += `
+                        {% for index, row in data.iterrows %}
+                        {% if index > 199 %} <tr name='{{ row.SETBlock }}'>
+                            <td style="text-align: left;border-right-style: double;border-right-width: medium;" rowspan=" 3">
+                                <button id='{{row.Circuit}}_circuit' onclick="toggle(this, id)" class="circuit-btn">
+                                    {{ row.Circuit }}
+                                </button>
+                            </td>
+                            <td>
+                                {{ row.CableType }}
+                                {% if row.가닥수 > 1 %}
+                                <b style="color:red">
+                                    x {{ row.가닥수 | floatformat:"-1" }}
+                                </b>
+                                {% endif %}
+                            </td>
+                            <td id='{{row.Circuit}}_totallength'>
+                                {{ row.길이 | floatformat:"-1" }} </td>
+                            <td style="text-align: right;" id='{{row.Circuit}}_FromLength'>{{ row.FromLength }}</td>
+                            <td id='{{row.Circuit}}_FromEquipment' style="font-size:small">{{ row.FromEquipment }}</td>
+                            <td id='{{row.Circuit}}_ToEquipment' style="font-size:small">{{ row.ToEquipment }}</td>
+                            <td style="text-align: left;" id='{{row.Circuit}}_ToLength'>{{ row.ToLength }}</td>
+                        </tr>
+                        <tr name='{{ row.SETBlock }}'>
+
+                            <td style="text-align: left;" colspan="6" id='{{row.Circuit}}__BlockPATH'>
+                                <span
+                                    style="background-color: #ff00cd2b;border: none;border-radius: 8px;padding: 4px;margin-right: 6px;padding-left: 7px;">
+                                    {{ row.SETBlock }}
+                                </span>
+                                <span id='{{row.Circuit}}_BlockPATH'>
+                                    {{ row.BlockPATH }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr name='{{ row.SETBlock }}' style="border-bottom-style: double;">
+                            <td colspan="6" style="text-align: left;" id='{{row.Circuit}}__NodePATH'>
+                                <span id='{{row.Circuit}}_node3' style="display:none">
+                                    <button id='{{row.Circuit}}_back' onclick="originpath(this,id)"
+                                        class="back-btn">&#x21A9;</button>
+                                </span>
+                                <span id='{{row.Circuit}}_node'></span>
+                                <span id='{{row.Circuit}}_node2'>
+                                    {% if row.NodePATH %}
+                                    {% for i in row.NodePATH.split %}
+                                    {% if "-" in i %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen_cir(this, id)" class="cir-btn">
+                                        {{ i }}</button>
+                                    {% elif i == node|upper %}
+                                    {% if i|slice:"-1:" in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                                    {% if "JBJ" in i %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn blue joinb coming">
+                                        {{ i }}</button>
+                                    {% else %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn blue coming">
+                                        {{ i }}</button>
+                                    {% endif %}
+                                    {% else %}
+                                    {% if "JBJ" in i %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn blue joinb">
+                                        {{ i }}</button>
+                                    {% else %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn blue">
+                                        {{ i }}</button>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% else %}
+                                    {% if i|slice:"-1:" in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                                    {% if "JBJ" in i %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn joinb coming">
+                                        {{ i }}</button>
+                                    {% else %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn coming">
+                                        {{ i }}</button>
+                                    {% endif %}
+                                    {% else %}
+                                    {% if "JBJ" in i %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn joinb">
+                                        {{ i }}</button>
+                                    {% else %}
+                                    <button name='{{ row.Circuit }}' id='{{row.Circuit}}_{{forloop.counter0}}'
+                                        onclick="callen(this, id)" class="node-btn">
+                                        {{ i }}</button>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% elif index == 200 %}
+                        <tr>
+                            <td>200개이상 생략됨.</td>
+                            <td colspan="6" style="text-align: left;">
+                                <button onclick="showmore()">더보기</button>
+                            </td>
+                        </tr>
+                        {{ break}}
+                        {% endif %}
+                        {% endfor %}`
+
+
+    }
+    function sbsfilter(btn, id) {
+        if (btn.classList.contains('showsb')) {
+            btn.classList.remove('showsb');
+            btn.classList.add('hidesb');
+            document.querySelectorAll("[name=" + btn.innerText + "]").forEach(elem => elem.style.display = "none");
+        }
+        else {
+
+            btn.classList.remove('hidesb');
+            btn.classList.add('showsb');
+            document.querySelectorAll("[name=" + btn.innerText + "]").forEach(elem => elem.style.display = "");
+        }
+
+    }
+    function sbsbutton(btn) {
+        if (btn.classList.contains('fa-caret-down')) {
+            document.getElementById('setblocks').style.display = "block"
+            btn.classList.remove('fa-caret-down');
+            btn.classList.add('fa-caret-up');
+        }
+        else {
+            document.getElementById('setblocks').style.display = "none"
+            btn.classList.remove('fa-caret-up');
+            btn.classList.add('fa-caret-down');
+        }
+    }
+    function showLoadingPopup() {
+        document.querySelector('meta[name="viewport"]').setAttribute('content', 'initial-scale=0.5');
+        document.getElementById("loading-popup").style.display = "block";
+        // 로딩 팝업을 표시하는 동안 페이지가 언로드 되지 않도록 이벤트 리스너를 추가합니다.
+        window.addEventListener("pageshow", hideLoadingPopup);
+    }
+
+    function hideLoadingPopup() {
+        document.getElementById("loading-popup").style.display = "none";
+        document.getElementById('input_type').value = ''
+        document.getElementById('input_cir').value = ''
+        document.getElementById('input_node').value = ''
+        document.getElementById('input_block').value = ''
+    }
+
+    const cb1 = document.getElementById('checkbox1');
+    const cb1Label = document.getElementById('checkbox1-label');
+    const cb2 = document.getElementById('checkbox2');
+    const cb2Label = document.getElementById('checkbox2-label');
+
+    [cb1, cb2].forEach(cb => {
+        cb.addEventListener('click', () => {
+            const target = cb === cb1 ? 'BlockPATH' : 'NodePATH';
+            const isHide = cb.checked;
+            const display = isHide ? 'none' : '';
+
+            {% for index, row in data.iterrows %}
+            if ('{{index}}' < showcount) {
+                document.getElementById('{{row.Circuit}}__' + target).style.display = display;
+            }
+            {% endfor %}
+        });
+    });
+
+    function plusbtnclick(btn) {
+        if (btn.querySelector('i').classList.contains('fa-plus')) {
+            btn.querySelector('i').classList.remove('fa-plus');
+            btn.querySelector('i').classList.add('fa-minus');
+            document.querySelectorAll('.form-input').forEach(input => { input.style.width = '120px'; });
+            document.getElementById('input_type').style.display = "";
+            document.getElementById('input_block').style.display = "";
+        } else {
+            btn.querySelector('i').classList.remove('fa-minus');
+            btn.querySelector('i').classList.add('fa-plus');
+            document.querySelectorAll('.form-input').forEach(input => { input.style.width = '170px'; });
+            document.getElementById('input_type').style.display = "none";
+            document.getElementById('input_block').style.display = "none";
+        }
+    }
+    let count = 0;
+
+
+
+
+    function toggle(btn, cellId) {
+        var shipnum = "{{ shipnum }}";
+        if (btn.style.backgroundColor == "yellow") {
+            // 이미 선택되어 있는 버튼을 다시 클릭한 경우
+            // MySQL에서 해당 circuit의 checked 열을 1로 갱신합니다.
+            $.ajax({
+                type: 'POST',
+                url: '/update_checked',
+                data: {
+                    'circuit': cellId.split("_")[0],
+                    'checked': 0,
+                    'shipnum': shipnum,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                dataType: 'json',
+                async: false,
+                success: function (data) {
+                    console.log('Success');
+                },
+                error: function () {
+                    console.log('Failed');
+                }
+            });
+            btn.style.backgroundColor = "";
+            count--;
+        } else {
+            // 새로운 버튼을 선택한 경우
+            // MySQL에서 해당 circuit의 checked 열을 0으로 갱신합니다.
+            $.ajax({
+                type: 'POST',
+                url: '/update_checked',
+                data: {
+                    'circuit': cellId.split("_")[0],
+                    'checked': 1,
+                    'shipnum': shipnum,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                dataType: 'json',
+                success: function (data) {
+                    console.log('Success');
+                    btn.style.backgroundColor = "yellow";
+                    count++;
+                },
+                error: function () {
+                    console.log('Failed');
+                }
+            });
+            btn.style.backgroundColor = "yellow";
+            count++;
+        }
+        var circuitBtns = document.getElementsByClassName("circuit-btn");
+        var yellowCount = 0;
+
+        for (var i = 0; i < circuitBtns.length; i++) {
+            if (circuitBtns[i].style.backgroundColor == "yellow") {
+                yellowCount++;
+            }
+        }
+        document.getElementById("count").innerHTML = yellowCount;
+
+        var totalweight = 0;
+        var nowweight = 0;
+        var weightper = 0;
+        var makercount = 0;
+        {% for index, row in data.iterrows %}
+        if ('{{row.CableType}}'.indexOf("MAKE") == -1 && '{{row.CableType}}'.indexOf("MC") == -1) {
+            totalweight += '{{row.단위중량}}' * 1;
+            if (document.getElementById('{{row.Circuit}}_circuit').style.backgroundColor == "yellow") {
+                nowweight += '{{row.단위중량}}' * 1;
+            }
+        }
+        else {
+            makercount++
+        }
+        {% endfor %}
+        if (totalweight > 0) {
+            weightper = Math.round(nowweight / totalweight * 100);
+        }
+        if (makercount > 0) {
+            document.getElementById("weight").innerHTML = '<div id="popup_text" onclick="hidepopup(this)" style="display:none;position:absolute;background-color: white;position: absolute;padding: 10px 10px;border-radius: 10px;box-shadow: 0px 2px 4px rgb(0 0 0 / 25%);margin-left: 80px;">Maker 케이블제외 전로용량</div><div onclick="showpopup_1()">전로(' + weightper + '%)<br>Maker :' + makercount + '개</div>';
+        }
+        else {
+            document.getElementById("weight").innerHTML = "<div>전로(" + weightper + "%)</div>";
+        }
+    }
+
+    function hidepopup(btn) {
+        btn.style.display = "none"
+    }
+
+    function showpopup_1() {
+        document.getElementById("popup_text").style.display = ""
+    }
+    function callen_cir(btn, cellId) {
+        if (btn.innerText.indexOf("근처") >= 0) {
+            document.getElementById('input_node').value = btn.innerText.replace("근처", "")
+        }
+        else {
+            document.getElementById('input_cir').value = btn.innerText
+        }
+    }
+    function inputthis(btn) {
+        if (btn.innerText.indexOf("-") == -1) {
+            if (btn.innerText.indexOf("근처") >= 0) {
+                document.getElementById('input_node').value = btn.innerText.replace("근처", "")
+            }
+            else {
+                document.getElementById('input_node').value = btn.innerText
+            }
+        }
+        else {
+            document.getElementById('input_cir').value = btn.innerText
+
+        }
+    }
+    function callen(btn, cellId) {
+        if (btn.innerText.indexOf("-") == -1) {
+            if (btn.innerText.indexOf("근처") >= 0) {
+                document.getElementById('input_node').value = btn.innerText.replace("근처", "")
+            }
+            else {
+                document.getElementById('input_node').value = btn.innerText
+            }
+        }
+        else {
+            document.getElementById('input_cir').value = btn.innerText
+
+        }
+        var buttons = document.getElementsByName(cellId.split("_")[0]);
+
+        var redbtn = []
+        for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i].classList.contains('red') || buttons[i].classList.contains('blue')) {
+                redbtn.push(i)
+            }
+        }
+        switch (redbtn.length) {
+            case 0: arguments
+                btn.classList.add('blue')
+                //btn.style.backgroundColor = "blue";
+                //btn.style.color = "white"
+                break;
+            case 1: arguments
+                if (btn.classList.contains('blue')) {
+                    btn.classList.remove('blue');
+                    //btn.style.backgroundColor = "";
+                    //btn.style.color = "black"
+
+                } else {
+                    btn.classList.add('red')
+                    //btn.style.backgroundColor = "red";
+                    //btn.style.color = "white"
+                }
+                break;
+            case 2: arguments
+
+                for (var i = 0; i < buttons.length; i++) {
+                    buttons[i].classList.remove('blue');
+                    buttons[i].classList.remove('red');
+                }
+                break;
+        }
+        redbtn = []
+        var countbtn = 0;
+        for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i].classList.contains('red') || buttons[i].classList.contains('blue')) {
+                redbtn.push(i)
+                countbtn++
+            }
+        }
+        if (countbtn == 2) {
+
+            {% for index, row in data.iterrows %}
+            if ('{{index}}' < showcount) {
+                if ('{{ row.Circuit }}' == cellId.split("_")[0]) {
+                    a = '{{ row.길이Node }}'
+                    b = buttons[redbtn[0]].innerText;
+                    c = buttons[redbtn[1]].innerText;
+                    split_a = a.split(" ")
+                    if (a.indexOf(b) !== -1 && a.indexOf(c) !== -1 && a.indexOf(")-T       ") !== -1) {
+                        let firstVal = parseFloat(a.substring(a.indexOf(")-T       ") - 7, a.indexOf(")-T       ")));
+                        let secondVal = parseFloat(a.substring(a.indexOf(c) - 9, a.indexOf(c) - 2));
+                        let thirdVal = parseFloat(a.substring(a.indexOf(b) - 9, a.indexOf(b) - 2));
+                        if (a.indexOf(b) <= a.indexOf(c)) {
+                            fr = Math.round((thirdVal) * 100) / 100;
+                            to = Math.round((firstVal - secondVal) * 100) / 100;
+                            ct = Math.round((secondVal - thirdVal) * 100) / 100;
+                            total = Math.round((fr + to + ct) * 100) / 100
+                        } else {
+                            fr = Math.round((firstVal - thirdVal) * 100) / 100;
+                            to = Math.round((secondVal) * 100) / 100;
+                            ct = Math.round((thirdVal - secondVal) * 100) / 100;
+                            total = Math.round((fr + to + ct) * 100) / 100
+                        }
+                    }
+                    else {
+                        fr = "N";
+                        to = "N";
+                        ct = "N";
+                        total = 0
+                    }
+                    if (document.getElementById(cellId.split("_")[0] + '_totallength').innerText > total + 1) {
+                        document.getElementById(cellId.split("_")[0] + '_totallength').bgColor = "blue"
+                        document.getElementById(cellId.split("_")[0] + '_totallength').style.color = "white"
+                    } else if (document.getElementById(cellId.split("_")[0] + '_totallength').innerText < total) {
+                        document.getElementById(cellId.split("_")[0] + '_totallength').bgColor = "red"
+                        document.getElementById(cellId.split("_")[0] + '_totallength').style.color = "white"
+                    }
+                    document.getElementById(cellId.split("_")[0] + '_totallength').innerText += " / " + total
+
+                    if (buttons[redbtn[0]].classList.contains('blue')) {
+                        nodeLength = fr + "  <button  class='node-btn' style='font-size:20px' onclick='inputthis(this)'>" + b + "</button>  " + ct + "  <button class='node-btn' style='font-size:20px' onclick='inputthis(this)'>" + c + "</button>  " + to
+                    }
+                    else {
+                        nodeLength = to + "  <button class='node-btn' style='font-size:20px' onclick='inputthis(this)'>" + c + "</button>  " + ct + "  <button class='node-btn' style='font-size:20px' onclick='inputthis(this)'>" + b + "</button>  " + fr
+
+
+                        var fl = document.getElementById(cellId.split("_")[0] + '_FromLength').innerText
+                        var fe = document.getElementById(cellId.split("_")[0] + '_FromEquipment').innerText
+                        var tl = document.getElementById(cellId.split("_")[0] + '_ToLength').innerText
+                        var te = document.getElementById(cellId.split("_")[0] + '_ToEquipment').innerText
+                        var bp = document.getElementById(cellId.split("_")[0] + '_BlockPATH').innerText
+
+                        document.getElementById(cellId.split("_")[0] + '_FromLength').innerText = tl;
+                        document.getElementById(cellId.split("_")[0] + '_FromEquipment').innerText = te;
+                        document.getElementById(cellId.split("_")[0] + '_ToLength').innerText = fl;
+                        document.getElementById(cellId.split("_")[0] + '_ToEquipment').innerText = fe;
+
+                        bpsplit = bp.split(" ")
+                        bpsplit = bpsplit.reverse()
+                        txt = " "
+                        for (var i = 0; i < bpsplit.length; i++) {
+                            txt = txt + "" + bpsplit[i] + " "
+                        }
+                        document.getElementById(cellId.split("_")[0] + '_BlockPATH').innerText = txt;
+
+
+                    }
+                    buttons[redbtn[0]].classList.remove('blue')
+                    buttons[redbtn[0]].classList.remove('red')
+                    buttons[redbtn[1]].classList.remove('blue')
+                    buttons[redbtn[1]].classList.remove('red')
+                    for (var i = 0; i < buttons.length; i++) {
+                        if (buttons[i].innerText == '{{ node|upper }}') {
+                            buttons[i].classList.add('blue')
+                        }
+                    }
+
+                }
+            }
+            {% endfor %}
+            document.getElementById(cellId.split("_")[0] + '_node').innerHTML = nodeLength;
+            document.getElementById(cellId.split("_")[0] + '_node').style.fontWeight = "bold";
+            document.getElementById(cellId.split("_")[0] + '_node').style.display = "inline";
+            document.getElementById(cellId.split("_")[0] + '_node2').style.display = "none";
+            document.getElementById(cellId.split("_")[0] + '_node3').style.display = "inline";
+        }
+        //document.getElementById("count").innerHTML = countbtn;
+    }
+    function originpath(btn, cellId) {
+        document.getElementById(cellId.split("_")[0] + '_node').style.display = "none";
+        document.getElementById(cellId.split("_")[0] + '_node2').style.display = "inline";
+        document.getElementById(cellId.split("_")[0] + '_node3').style.display = "none";
+        document.getElementById(cellId.split("_")[0] + '_node2').style.display = "inline";
+
+        {% for index, row in data.iterrows %}
+        if ('{{index}}' < showcount) {
+            if ('{{ row.Circuit }}' == cellId.split("_")[0]) {
+
+                document.getElementById(cellId.split("_")[0] + '_FromLength').innerHTML = '{{ row.FromLength }}';
+                document.getElementById(cellId.split("_")[0] + '_FromEquipment').innerHTML = '{{ row.FromEquipment }}';
+                document.getElementById(cellId.split("_")[0] + '_ToLength').innerHTML = '{{ row.ToLength }}';
+                document.getElementById(cellId.split("_")[0] + '_ToEquipment').innerHTML = '{{ row.ToEquipment}}';
+                document.getElementById(cellId.split("_")[0] + '_BlockPATH').innerHTML = '{{ row.BlockPATH }}';
+                document.getElementById(cellId.split("_")[0] + '_totallength').innerHTML = '{{ row.총길이|floatformat:"-1" }}';
+                document.getElementById(cellId.split("_")[0] + '_totallength').bgColor = "white"
+                document.getElementById(cellId.split("_")[0] + '_totallength').style.color = "black"
+            }
+        }
+        {% endfor %}
+    }
+</script>
+
+</html>

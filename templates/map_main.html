@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   <style type="text/css">
+      #mynetwork {
+         width: 100%;
+         height: 800px;
+         border: 1px solid lightgray;
+      }
+
+      #menu {
+         position: absolute;
+         background-color: white;
+         border: 1px solid lightgray;
+         padding: 10px;
+         z-index: 100;
+         right: -375px;
+      }
+
+      #menu2 {
+         display: none;
+         position: absolute;
+         background-color: white;
+         border: 1px solid lightgray;
+         padding: 10px;
+         z-index: 100;
+      }
+
+      body {
+         font-family: Arial, sans-serif;
+         margin: 20px;
+      }
+
+      .form-container {
+         flex-wrap: wrap;
+         justify-content: space-between;
+      }
+
+
+      .form-group {
+         display: flex;
+         flex-direction: column;
+      }
+
+
+      button {
+         background-color: #4CAF50;
+         border: none;
+         color: white;
+         padding: 5px 10px;
+         text-align: center;
+         text-decoration: none;
+         display: inline-block;
+         font-size: 14px;
+         margin: 4px 2px;
+         cursor: pointer;
+         border-radius: 4px;
+      }
+
+      button:hover {
+         background-color: #45a049;
+      }
+
+      fieldset {
+         border: 1px solid #ccc;
+      }
+
+      legend {
+         padding: 0 10px;
+         font-weight: bold;
+      }
+
+      input[type="submit"] {
+         background-color: #4CAF50;
+         border: none;
+         color: white;
+         padding: 5px 10px;
+         text-align: center;
+         text-decoration: none;
+         display: inline-block;
+         font-size: 14px;
+         margin: 4px 2px;
+         cursor: pointer;
+         border-radius: 4px;
+      }
+
+      input[type="number"] {
+         width: 60px
+      }
+
+      #labelAdjustPad {
+         display: none;
+         position: absolute;
+         z-index: 1000;
+         width: 100px;
+         height: 100px;
+         background-color: rgba(200, 200, 200, 0.5);
+      }
+
+      #labelAdjustHandle {
+         position: absolute;
+         width: 10px;
+         height: 10px;
+         background-color: red;
+         border-radius: 5px;
+         cursor: move;
+
+         z-index: inherit;
+      }
+
+      #colorButtons {
+         position: absolute;
+         right: -30px;
+         top: 50%;
+         transform: translateY(-50%);
+      }
+
+      #colorButtons2 {
+         position: absolute;
+         right: -60px;
+         top: 50%;
+         transform: translateY(-50%);
+      }
+
+      .colorButton {
+         display: block;
+         width: 20px;
+         height: 12px;
+         border: none;
+         cursor: pointer;
+         margin: 2px;
+      }
+
+      .colorButton2 {
+         display: block;
+         width: 20px;
+         height: 12px;
+         border: none;
+         cursor: pointer;
+         margin: 2px;
+      }
+   </style>
+   <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+   <title>Map Form</title>
+</head>
+
+<body>
+   <div id="labelAdjustPad">
+      <div id="labelAdjustHandle"></div>
+      <div id="colorButtons">
+         <button class="colorButton" style="background-color: #FF0000;" data-color="#FF0000"></button>
+         <button class="colorButton" style="background-color: #FF7F00;" data-color="#FF7F00"></button>
+         <button class="colorButton" style="background-color: #FFFF00;" data-color="#FFFF00"></button>
+         <button class="colorButton" style="background-color: #00FF00;" data-color="#00FF00"></button>
+         <button class="colorButton" style="background-color: #0000FF;" data-color="#0000FF"></button>
+         <button class="colorButton" style="background-color: #4B0082;" data-color="#4B0082"></button>
+         <button class="colorButton" style="background-color: #8B00FF;" data-color="#8B00FF"></button>
+      </div>
+      <div id="colorButtons2">
+         <button class="colorButton2" style="background-color: #FF0000;" data-color2="#FF0000"></button>
+         <button class="colorButton2" style="background-color: #FF7F00;" data-color2="#FF7F00"></button>
+         <button class="colorButton2" style="background-color: #FFFF00;" data-color2="#FFFF00"></button>
+         <button class="colorButton2" style="background-color: #00FF00;" data-color2="#00FF00"></button>
+         <button class="colorButton2" style="background-color: #0000FF;" data-color2="#0000FF"></button>
+         <button class="colorButton2" style="background-color: #4B0082;" data-color2="#4B0082"></button>
+         <button class="colorButton2" style="background-color: #8B00FF;" data-color2="#8B00FF"></button>
+      </div>
+      <div id="menu">
+         <button id="fixNode">고정</button>
+         <input type="text" id="addnode_id" style="width:50px" placeholder="name"><input type="text" id="addnode_label"
+            placeholder="length" style="width:50px"><button onclick="addnode()">추가</button>
+      </div>
+   </div>
+   <div id="mynetwork"></div>
+
+
+   <div id="menu2">
+      <input type="text" id="edge_val" placeholder="name" style="width:50px"><button
+         onclick="edgechange()">수정</button><br>
+      <input type="text" id="addedge_id" placeholder="name" style="width:50px"><button
+         onclick="addedge()">추가</button><br>
+      <button onclick="deleteEdge()">edge 삭제</button>
+
+   </div>
+   <div class="container">
+      <table>
+         <tr>
+            <td>
+               <form class="form-container" action="map" method="get">
+                  <div class="form-group">
+                     <label for="shipnum">호선:</label>
+                     <select name="shipnum" id="shipnum">
+                        <option value="3278">3278</option>
+                        <option value="3290">3290</option>
+                        <option value="3303">3303</option>
+                     </select>
+                  </div>
+                  <div class="form-group">
+                     <label for="node">노드:</label>
+                     <input type="text" id="node" name="node">
+                  </div>
+                  <div class="form-group">
+                     <input type="submit" value="확인">
+                  </div>
+               </form>
+               <button onclick="downloadFullNetworkImage()">Download Image</button>
+            </td>
+            <td>
+               <form id="load-mymap-form" class="form-container">
+                  <div class="form-group">
+                     <label for="mymap-title">MyMap:</label>
+                     <select name="mymap-title" id="mymap-title">
+                        <!-- 여기에 데이터베이스에서 가져온 MyMap 타이틀이 들어갑니다. -->
+                     </select>
+                  </div>
+                  <div class="form-group">
+                     <button type="button" id="load-mymap">불러오기</button>
+                  </div>
+                  <div class="form-group">
+                     <input type="text" id="title" name="title">
+                     <button id="saveButton">저장</button>
+                  </div>
+               </form>
+            </td>
+            <td>
+               <div class="form-container">
+                  <div class="form-group">
+                     <input type="checkbox" id="easymode" checked>
+                     <button id="simplify">간략히</button>
+                  </div>
+                  <div class="form-group">
+                     <label>
+                        Node Font Size:
+                        <button onclick="fontsizechange('+','all')">+</button>
+                        <button onclick="fontsizechange('-','all')">-</button>
+                     </label>
+                  </div>
+               </div>
+               <div class="form-group">
+                  <label>
+                     Node Color:
+                     <input type="color" name="nodeColor" value="#97C2FC" onchange="updateNodeColor(this.value)">
+                  </label>
+               </div>
+               <div class="form-group">
+                  <label>
+                     Node Size:
+                     <input type="number" name="nodeSize" value="10" step="1" min="1" style="width: 30px;"
+                        onchange="updateNodeSize(this.value)">
+                  </label>
+               </div>
+               <div class="form-group">
+                  <label>
+                     Edge Color:
+                     <input type="color" name="edgeColor" value="#848484" onchange="updateEdgeColor(this.value)">
+                  </label>
+               </div>
+               <div class="form-group">
+                  <label>
+                     Edge Width:
+                     <input type="number" name="edgeWidth" value="1" step="0.1" min="0.1" style="width: 30px;"
+                        onchange="updateEdgeWidth(this.value)">
+                  </label>
+               </div>
+            </td>
+            <td>
+               <form id="optionsForm" class="form-container">
+
+                  <div class="form-group">
+                     <label>
+                        Physics Enabled:
+                        <input type="checkbox" name="physicsEnabled" checked>
+                     </label>
+                  </div>
+                  <fieldset>
+                     <legend>Physics Options</legend>
+                     <div class="form-group">
+                        <label>
+                           Gravitational Constant:
+                           <input type="number" name="gravitationalConstant" id="gravitationalConstant" value="-2000"
+                              step="100" min="-10000">
+                        </label>
+                     </div>
+                     <div class="form-group">
+                        <label>
+                           Central Gravity:
+                           <input type="number" name="centralGravity" id="centralGravity" value="0.3" step="0.1"
+                              min="0">
+                        </label>
+                     </div>
+                     <div class="form-group">
+                        <label>
+                           Spring Length:
+                           <input type="number" name="springLength" id="springLength" value="100" step="10" min="0">
+                        </label>
+                     </div>
+                     <div class="form-group">
+                        <label>
+                           Spring Constant:
+                           <input type="number" name="springConstant" id="springConstant" value="0.04" step="0.01"
+                              min="0">
+                        </label>
+                     </div>
+                     <div class="form-group">
+                        <label>
+                           Damping:
+                           <input type="number" name="damping" id="damping" value="0.09" step="0.01" min="0">
+                        </label>
+                     </div>
+                     <div class="form-group">
+                        <label>
+                           Avoid Overlap:
+                           <input type="number" name="avoidOverlap" id="avoidOverlap" value="0.1" step="0.1" min="0">
+                        </label>
+                     </div>
+                     <div class="form-group">
+                        <label>
+                           Iterations:
+                           <input type="number" name="iterations" id="iterations" value="1000" step="100" min="0">
+                        </label>
+                     </div>
+                  </fieldset>
+               </form>
+            </td>
+            <td>
+               <button onclick="setting_1()">1</button><button onclick="setting_2()">2</button><button
+                  onclick="setting_3()">3</button><br>
+               <button onclick="setting_4()">4</button><button onclick="setting_5()">5</button><button
+                  onclick="setting_6()">6</button><br>
+               <button onclick="setting_N1()">일반</button><button onclick="setting_N2()">코밍</button><button
+                  onclick="setting_N3()">L-L</button><button onclick="setting_N4()">L-E</button><br>
+               <button onclick="setting_E1()">선-일반</button><button onclick="setting_E2()">선-Lan</button><button
+                  onclick="setting_E3()">선-단1</button><button onclick="setting_E4()">선-단2</button>
+
+            </td>
+            <td>
+               <div id="selectednodes" style="background-color: #e7e2e2;"></div>
+            </td>
+            <td>
+               <div id="selectededges" style="background-color: #e7e2e2;"></div>
+            </td>
+         </tr>
+      </table>
+
+      <!-- Options form -->
+
+   </div>
+</body>
+<script type="text/javascript">
+   document.addEventListener("DOMContentLoaded", function () {
+      // 서버에 MyMap 타이틀 목록을 가져오는 요청을 보냅니다.
+      fetch("/get_mymap_titles")
+         .then(response => response.json())
+         .then(data => {
+            if (data.status === "success") {
+               const mymapTitleSelect = document.getElementById("mymap-title");
+               data.titles.forEach(title => {
+                  const option = document.createElement("option");
+                  option.value = title;
+                  option.textContent = title;
+                  mymapTitleSelect.appendChild(option);
+               });
+            }
+         });
+   });
+   var shipnum = ""
+   if ('{{shipnum}}'.length > 0) {
+      shipnum = '{{shipnum}}';
+   }
+   var tuples = []
+   if ('{{edges|safe}}'.length > 0) {
+      tuples = JSON.parse('{{edges|safe}}');
+   }
+   var nodes_set = new Set();
+   var nodes = [];
+   var edges = [];
+   var edges_set = new Set(); // 새로운 Set 객체를 만듭니다.
+   function isLastCharUpperCase(str) {
+      return /[A-Z]$/.test(str);
+   }
+   var endnodes = []
+   if ('{{endnodes|safe}}'.length > 0) {
+      endnodes = JSON.parse('{{endnodes|safe}}');
+   }
+   var selectedTitle = '{{node}}'
+
+   var nodes_set2 = new Set();
+   var allnode = new Set();
+   var fixnode = new Set();
+
+   for (var i = 0; i < tuples.length; i++) {
+      var from_node = tuples[i][0];
+      var to_node = tuples[i][1];
+
+      if (!nodes_set2.has(from_node)) {
+         nodes_set2.add(from_node);
+
+         var newlabel = from_node.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+         newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
+         if (allnode.has(newlabel)) {
+            fixnode.add(from_node)
+         }
+         else { allnode.add(newlabel); }
+      }
+      if (!nodes_set2.has(to_node)) {
+         nodes_set2.add(newlabel);
+
+         var newlabel = to_node.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+         newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
+         if (allnode.has(newlabel)) {
+            fixnode.add(to_node)
+         }
+         else { allnode.add(newlabel); }
+      }
+   }
+
+
+
+
+
+
+   for (var i = 0; i < tuples.length; i++) {
+      var from_node = tuples[i][0];
+      var to_node = tuples[i][1];
+      var edge_length = tuples[i][2] ? tuples[i][2] : 0;
+
+      if (!nodes_set.has(from_node)) {
+         var ol = `<b>${from_node}</b>`
+         if (fixnode.has(from_node)) {
+            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+         }
+         else {
+            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+            newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
+         }
+         nodes_set.add(from_node);
+         nodes.push({
+            id: from_node,
+            label: newlabel,
+            shadow: {
+               enabled: isLastCharUpperCase(from_node),
+               color: 'red',
+               size: 10,
+               x: 0,
+               y: 0
+            },
+            size: isLastCharUpperCase(from_node) ? 10 : 5, // 조건부 설정
+            font: {
+               multi: 'html',
+               size: isLastCharUpperCase(from_node) ? 15 : from_node.includes('JB') ? 14 : 12,
+               bold: { mod: isLastCharUpperCase(from_node) ? 'bold' : from_node.includes('JB') ? 'bold' : "" }
+            }
+         });
+      }
+      if (!nodes_set.has(to_node)) {
+         var ol = `<b>${to_node}</b>`
+         if (fixnode.has(to_node)) {
+            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+         }
+         else {
+            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+            newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
+         }
+         nodes_set.add(to_node);
+         nodes.push({
+            id: to_node,
+            label: newlabel,
+            shadow: {
+               enabled: isLastCharUpperCase(to_node),
+               color: 'red',
+               size: 10,
+               x: 0,
+               y: 0
+            },
+            size: isLastCharUpperCase(to_node) ? 10 : 5, // 조건부 설정
+            font: {
+               multi: 'html',
+               size: isLastCharUpperCase(to_node) ? 15 : to_node.includes('JB') ? 14 : 12,
+               bold: { mod: isLastCharUpperCase(to_node) ? 'bold' : to_node.includes('JB') ? 'bold' : "" }
+            }
+         });
+      }
+
+      var edge_id1 = from_node + "_" + to_node;
+      var edge_id2 = to_node + "_" + from_node;
+
+      if (!edges_set.has(edge_id1) && !edges_set.has(edge_id2)) {
+         edges_set.add(edge_id1);
+         edges.push({
+            id: edge_id1,
+            from: from_node,
+            to: to_node,
+            label: edge_length.toString(), // Add this line to display edge length on the edge
+            width: 1,
+            length: parseFloat(edge_length) * 10
+         });
+      }
+   }
+
+   // 네트워크를 생성하기 전에 옵션을 정의합니다.
+   var options = {
+      physics: {
+         solver: 'barnesHut',
+         enabled: true, // 물리 시뮬레이션을 사용합니다.
+         barnesHut: {
+            gravitationalConstant: -5000, // 중력 상수를 감소시켜 노드간 거리를 늘립니다.
+            centralGravity: 0.1, // 중심 중력을 줄여서 노드가 더 떨어지게 합니다.
+            springLength: 200, // 기본적으로 사용할 엣지 길이를 설정합니다.
+            springConstant: 0.01, // 스프링 상수를 줄여서 엣지의 길이 영향력을 높입니다.
+            damping: 0.09,
+            avoidOverlap: 0.1
+         },
+         stabilization: {
+            iterations: 100, // 안정화 반복 횟수를 조정하여 최적의 레이아웃을 찾습니다.
+         },
+      },
+      nodes: {
+         shape: 'dot',
+         scaling: {
+            min: 10,
+            max: 30
+         },
+         font: {
+            size: 12,
+            face: 'Tahoma'
+         }
+      },
+      edges: {
+         color: {
+            inherit: false
+         },
+         smooth: {
+            enabled: false,
+            type: "continuous",
+            roundness: 0.5
+         },
+         font: {
+            size: 10 // 원하는 글자 크기로 변경
+         }
+      },
+      layout: {
+         improvedLayout: false
+      },
+      interaction: {
+         multiselect: true
+      }
+   };
+   // 컨테이너 및 옵션 정의
+   var container = document.getElementById('mynetwork');
+
+   var nodesData = new vis.DataSet(nodes);
+   var edgesData = new vis.DataSet(edges);
+
+   var data = {
+      nodes: nodesData,
+      edges: edgesData
+   };
+
+   var network = new vis.Network(container, data, options);
+
+   // 컨텍스트 메뉴 표시
+   var menu = document.getElementById('menu');
+   var menu2 = document.getElementById('menu2');
+   var fixNodeButton = document.getElementById('fixNode');
+   var selectedNodeId = null;
+   var selectedEdgeId = null;
+   var timeoutId = null;
+   var connectedNodePositions;
+   var connectedNodes;
+   var connectedEdges;
+   function updateSelectedInfo(n, e) {
+      selectedNodeId = n;
+      selectedEdgeId = e;
+      var selnode = "";
+      var seledge = "";
+      if (selectedNodeId != null) {
+         selectedNodeId.forEach(function (a) {
+            selnode += '<br>' + a;
+         });
+      }
+      if (selectedEdgeId != null) {
+         selectedEdgeId.forEach(function (a) {
+            seledge += '<br>' + a;
+         });
+      }
+      document.getElementById('selectednodes').innerHTML = selnode;
+      document.getElementById('selectededges').innerHTML = seledge;
+   }
+
+
+   network.on('click', function (params) {
+      updateSelectedInfo(params.nodes, params.edges);
+      var clickedPosition = params.pointer.DOM;
+      const mynetwork = document.getElementById("mynetwork");
+      const rect = mynetwork.getBoundingClientRect();
+      var x = rect.left + clickedPosition.x + window.scrollX + 20;
+      var y = rect.top + clickedPosition.y + window.scrollY - 50;
+      menu2.style.left = x + 'px';
+      menu2.style.top = y + 'px';
+
+      if (params.nodes.length > 0) {
+         selectedNodeId = params.nodes;
+         var selectedNode = nodesData.get(selectedNodeId[selectedNodeId.length - 1]);
+         timeoutId = setTimeout(function () {
+            menu2.style.display = 'none';
+
+            console.log(nodesData.get(params.nodes[params.nodes.length - 1]))
+         }, 10);
+      } else if (params.edges.length > 0) {
+         // 선택한 간선의 ID를 가져옵니다.
+         selectedEdgeId = params.edges;
+         var currentWidth = data.edges.get(selectedEdgeId[selectedEdgeId.length - 1]).width;
+         if (typeof currentWidth === 'undefined') {
+            currentWidth = 1;
+         }
+         var newWidth = currentWidth + 1;
+         if (newWidth > 6) {
+            newWidth = 1
+         }
+
+         timeoutId = setTimeout(function () {
+            menu2.style.display = 'block';
+            data.edges.update({ id: selectedEdgeId[selectedEdgeId.length - 1], width: currentWidth });
+            console.log(edgesData.get(params.edges[params.edges.length - 1]))
+         }, 10);
+         data.edges.update({ id: selectedEdgeId[selectedEdgeId.length - 1], width: newWidth });
+      }
+      else {
+         menu2.style.display = 'none';
+      }
+   });
+
+   network.on('release', function (params) {
+      if (timeoutId) {
+         clearTimeout(timeoutId);
+         timeoutId = null;
+      }
+   });
+   const threshold = 10; // 임계값 설정
+
+
+   network.on("dragStart", function (params) {
+      const nodeId = params.nodes[params.nodes.length - 1];
+      connectedNodes = network.getConnectedNodes(nodeId);
+      connectedNodePositions = connectedNodes.map(id => network.getPosition(id));
+      connectedEdges = edgesData.get({
+         filter: edge => edge.from === nodeId || edge.to === nodeId
+      });
+      connectedNodes.forEach(connectedNodes => {
+         connectedEdges.forEach(edge => {
+            if (edge.from === connectedNodes || edge.to === connectedNodes) {
+               edge.tempLabel = edge.label; // 원래 라벨을 임시 저장
+               var updatededge = edgesData.get(edge.id)
+               updatededge.tempLabel = edge.tempLabel
+               edgesData.update(updatededge);
+            }
+         });
+
+      });
+      //console.log(connectedEdges)
+   });
+
+   let draggingUpdateTimeout
+   function updateEdgeLabels() {
+      if (draggingUpdateTimeout) clearTimeout(draggingUpdateTimeout);
+      draggingUpdateTimeout = setTimeout(() => {
+         connectedNodes.forEach(connectedNodes => {
+            connectedEdges.forEach(edge => {
+               if (edge.from === connectedNodes || edge.to === connectedNodes) {
+                  edge.label = edge.tempLabel + "(" + createLengthLabel(edge) + ")";
+                  var updatededge = edgesData.get(edge.id)
+                  updatededge.label = edge.label
+                  edgesData.update(updatededge);
+                  //console.log(edge.label, edge.tempLabel)
+               }
+            });
+         });
+      }, 100)
+
+   }
+
+   network.on("dragging", function (params) {
+      if (params.nodes.length === 0) return;
+      updateEdgeLabels();
+
+   });
+
+   network.on("dragEnd", function (params) {
+      if (draggingUpdateTimeout) clearTimeout(draggingUpdateTimeout);
+      if (params.nodes.length > 0) {
+         selectedNodeId = params.nodes;
+
+         const nodeId = params.nodes[0];
+         const nodePosition = network.getPosition(nodeId);
+         const updatedNode = nodesData.get(nodeId)
+         updatedNode.x = nodePosition.x
+         updatedNode.y = nodePosition.y
+         var t = [];
+         if (document.getElementById('easymode').checked == false) {
+            connectedNodePositions.forEach(connectedNodePosition => {
+               if (Math.abs(nodePosition.x - connectedNodePosition.x) < threshold) {
+                  updatedNode.x = connectedNodePosition.x
+                  nodesData.update(updatedNode);
+               }
+               if (Math.abs(nodePosition.y - connectedNodePosition.y) < threshold) {
+                  updatedNode.y = connectedNodePosition.y
+                  nodesData.update(updatedNode);
+               }
+               t.push((updatedNode.x ** 2) + (updatedNode.y ** 2))
+            });
+         }
+         else {
+            connectedNodePositions.forEach(connectedNodePosition => {
+               if (Math.abs(nodePosition.x - connectedNodePosition.x) < threshold) {
+                  updatedNode.x = connectedNodePosition.x
+               }
+               if (Math.abs(nodePosition.y - connectedNodePosition.y) < threshold) {
+                  updatedNode.y = connectedNodePosition.y
+               }
+               t.push(((updatedNode.x - connectedNodePosition.x) ** 2) + ((updatedNode.y - connectedNodePosition.y) ** 2))
+            });
+            const minValue = Math.min(...t); // 스프레드 연산자를 사용하여 배열 요소를 Math.min에 전달
+            const minIndex = t.indexOf(minValue);
+            var targetnode = connectedNodes[minIndex]
+            var targetnodeposition = connectedNodePositions[minIndex]
+            var targetedge = connectedEdges[minIndex]
+            console.log(targetedge)
+            if (parseFloat(targetedge.label) > 0) {
+               var nowlen = Math.sqrt(minValue);
+               var targetlen = parseFloat(parseFloat(targetedge.label) * 100).toFixed(2)
+               var r = parseFloat(targetlen / nowlen).toFixed(2)
+               console.log(updatedNode.x, targetnodeposition.x, targetlen, nowlen, r)
+               updatedNode.x = (updatedNode.x - targetnodeposition.x) * r + targetnodeposition.x
+               updatedNode.y = (updatedNode.y - targetnodeposition.y) * r + targetnodeposition.y
+               nodesData.update(updatedNode);
+
+            }
+         }
+
+
+         connectedNodes.forEach(connectedNodes => {
+            connectedEdges.forEach(edge => {
+               if (edge.from === connectedNodes || edge.to === connectedNodes) {
+                  edge.label = edge.tempLabel;
+                  var updatededge = edgesData.get(edge.id)
+                  updatededge.label = edge.label
+                  edgesData.update(updatededge);
+                  //console.log(edge.label, edge.tempLabel)
+               }
+            });
+
+         });
+
+         const draggedNodeId = params.nodes[0];
+         edgesData.forEach(edge => {
+            if (edge.from === draggedNodeId || edge.to === draggedNodeId) {
+               edge.label = edge.tempLabel; // 임시 저장된 원래 라벨을 복원
+               delete edge.tempLabel;
+            }
+         });
+         nodesData.update(nodesData.get(nodeId));
+      }
+
+      updateSelectedInfo(params.nodes, params.edges);
+   });
+
+   function createLengthLabel(edge) {
+      const fromNode = network.getPosition(edge.from)
+      const toNode = network.getPosition(edge.to)
+      const distance = calculateDistance(fromNode.x, fromNode.y, toNode.x, toNode.y);
+      return distance.toFixed(2); // 기존 라벨과 길이를 함께 표시
+   }
+   function calculateDistance(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      return Math.sqrt(dx * dx + dy * dy);
+   }
+
+   fixNodeButton.addEventListener('click', function () {
+      fixNode(selectedNodeId[selectedNodeId.length - 1]);
+      updateSelectedInfo(null, null);
+   });
+   function applyChanges() {
+      if (selectedNodeId === null) {
+         return;
+      }
+      var newColor = document.getElementById('nodeColor').value;
+      var newSize = parseInt(document.getElementById('nodeSize').value);
+      selectedNodeId.forEach(function (id) {
+         var updatedNode = nodesData.get(id);
+         updatedNode.color = newColor
+         updatedNode.size = newSize
+         nodesData.update(updatedNode);
+      })
+      updateSelectedInfo(null, null);
+   }
+   function edgechange() {
+      var newEdgeval = document.getElementById('edge_val').value;
+      var edge = edgesData.get(selectedEdgeId[selectedEdgeId.length - 1])
+      edge.label = newEdgeval
+      edgesData.update(edge);
+      updateSelectedInfo(null, null);
+   }
+   function deleteEdge() {
+      var edge = edgesData.get(selectedEdgeId[selectedEdgeId.length - 1])
+      console.log(edge)
+      edgesData.remove(edge);
+      updateSelectedInfo(null, null);
+   }
+   function addedge() {
+      var edge = edgesData.get(selectedEdgeId[selectedEdgeId.length - 1])
+      var connectedNodes = network.getConnectedNodes(selectedEdgeId[selectedEdgeId.length - 1]);
+      var node1 = nodesData.get(connectedNodes[0]);
+      var node2 = nodesData.get(connectedNodes[1]);
+      var newNodeval = document.getElementById('addedge_id').value;
+      var node = nodesData.get(newNodeval)
+      var edgelabel = edge.label
+      if (!node) {
+         var nodePosition1 = network.getPosition(node1.id);
+         var nodePosition2 = network.getPosition(node2.id);
+         var newNode = {
+            id: newNodeval,
+            label: `<b>${newNodeval}</b>`,
+            shadow: {
+               enabled: isLastCharUpperCase(newNodeval),
+               color: 'red',
+               size: 10,
+               x: 0,
+               y: 0
+            },
+            size: isLastCharUpperCase(newNodeval) ? 10 : 5, // 조건부 설정
+            font: {
+               multi: 'html',
+               size: isLastCharUpperCase(newNodeval) ? 15 : newNodeval.includes('JB') ? 14 : 12,
+               bold: { mod: isLastCharUpperCase(newNodeval) ? 'bold' : newNodeval.includes('JB') ? 'bold' : "" }
+            },
+            x: (nodePosition1.x + nodePosition2.x) / 2,
+            y: (nodePosition1.y + nodePosition2.y) / 2,
+
+         }
+         edgesData.remove(edge);
+         nodesData.add(newNode);
+         var newEdge1 = {
+            id: node1.id + "_" + newNodeval,
+            from: node1.id,
+            to: newNodeval,
+            label: edgelabel.toString(), // Add this line to display edge length on the edge
+            width: 1,
+            length: 10
+         }
+         var newEdge2 = {
+            id: node2.id + "_" + newNodeval,
+            from: node2.id,
+            to: newNodeval,
+            label: edgelabel.toString(), // Add this line to display edge length on the edge
+            width: 1,
+            length: 10
+         }
+         edgesData.add(newEdge1);
+         edgesData.add(newEdge2);
+
+      }
+      updateSelectedInfo(null, null);
+   }
+   function addnode() {
+      var newNodeval = document.getElementById('addnode_id').value;
+      var node = nodesData.get(newNodeval)
+      if (!node) {
+         var nodePosition = network.getPosition(selectedNodeId[0]);
+         var newNode = {
+            id: newNodeval,
+            label: `<b>${newNodeval}</b>`,
+            shadow: {
+               enabled: isLastCharUpperCase(newNodeval),
+               color: 'red',
+               size: 10,
+               x: 0,
+               y: 0
+            },
+            size: isLastCharUpperCase(newNodeval) ? 10 : 5, // 조건부 설정
+            font: {
+               multi: 'html',
+               size: isLastCharUpperCase(newNodeval) ? 15 : newNodeval.includes('JB') ? 14 : 12,
+               bold: { mod: isLastCharUpperCase(newNodeval) ? 'bold' : newNodeval.includes('JB') ? 'bold' : "" }
+            },
+            x: nodePosition.x + 50,
+            y: nodePosition.y + 50
+         }
+         nodesData.add(newNode);
+      }
+      var newEdge = {
+         id: selectedNodeId[0] + "_" + newNodeval,
+         from: selectedNodeId[0],
+         to: newNodeval,
+         label: document.getElementById('addnode_label').value.toString(), // Add this line to display edge length on the edge
+         width: 1,
+         length: 10
+      }
+      //nodes.push(newNode)
+      //nodesData = new vis.DataSet(nodes);
+      //nodesData.update(newNode);
+      edgesData.add(newEdge);
+      updateSelectedInfo(null, null);
+   }
+   function fixNode(nodeID) {
+      var nodeColorInput = document.getElementsByName('nodeColor')[0].value;
+      var onetarget = nodesData.get(selectedNodeId[selectedNodeId.length - 1])
+      onetarget.fixed = { x: !(onetarget.fixed && onetarget.fixed.x), y: !(onetarget.fixed && onetarget.fixed.y) };
+      onetarget.color = onetarget.fixed.x ? 'red' : nodeColorInput; // 색상을 변경합니다.
+      selectedNodeId.forEach(function (id) {
+         var updatedNode = nodesData.get(id);
+         updatedNode.fixed = onetarget.fixed;
+         updatedNode.color = onetarget.color; // 색상을 변경합니다.
+         nodesData.update(updatedNode);
+      })
+   }
+
+   document.addEventListener("keydown", function (event) {
+      if (event.key === "Delete") {
+         var selectedNodes = network.getSelectedNodes();
+         var selectedEdges = network.getSelectedEdges();
+
+         // 선택된 노드 삭제
+         selectedNodes.forEach((nodeId) => {
+            nodesData.remove(nodeId);
+         });
+
+         // 선택된 엣지 삭제
+         selectedEdges.forEach((edgeId) => {
+            edgesData.remove(edgeId);
+         });
+         updateSelectedInfo(null, null);
+      }
+      if (event.key === "Insert") {
+         fixNode(selectedNodeId[selectedNodeId.length - 1]);
+      }
+      if (event.shiftKey && event.key === "Backspace") {
+         if (document.getElementById('easymode').checked == false) {
+            document.getElementById('easymode').checked = true
+         }
+         else {
+            document.getElementById('easymode').checked = false
+         }
+      }
+   });
+   // 노드 삭제
+   function deleteNode(nodeID) {
+      var connectedEdges = network.getConnectedEdges(nodeID);
+      if (connectedEdges.length === 2) {
+         var edge1 = edgesData.get(connectedEdges[0]);
+         var edge2 = edgesData.get(connectedEdges[1]);
+         var newEdgeLength = parseFloat((parseFloat(edge1.label) + parseFloat(edge2.label)).toFixed(2)); // 수정된 부분
+
+         if (edge1.from == edge2.from) {
+            var newEdge = { id: edge1.to + "_" + edge2.to, from: edge1.to, to: edge2.to, label: newEdgeLength.toString() }
+         }
+         else if (edge1.from == edge2.to) {
+            var newEdge = { id: edge1.to + "_" + edge2.from, from: edge1.to, to: edge2.from, label: newEdgeLength.toString() }
+         }
+         else if (edge1.to == edge2.from) {
+            var newEdge = { id: edge1.from + "_" + edge2.to, from: edge1.from, to: edge2.to, label: newEdgeLength.toString() }
+         }
+         else if (edge1.to == edge2.to) {
+            var newEdge = { id: edge1.from + "_" + edge2.from, from: edge1.from, to: edge2.from, label: newEdgeLength.toString() }
+         }
+         edgesData.remove(connectedEdges);
+         edgesData.add(newEdge);
+      } else {
+         edgesData.remove(connectedEdges);
+      }
+      nodesData.remove(nodeID);
+   }
+   function changelabelposition() {
+
+      var updatedNode = nodesData.get(selectedNodeId[0]);
+      if (!updatedNode.font.vadjust) { updatedNode.font.vadjust = 0 }
+      updatedNode.font.vadjust += 5
+      if (updatedNode.font.vadjust > 15) { updatedNode.font.vadjust = -100 }
+      nodesData.update(updatedNode);
+   }
+   function changelabelposition1() {
+      var updatedNode = nodesData.get(selectedNodeId[0]);
+      var tt = '        '
+
+      if (updatedNode.label.indexOf(tt) == -1) { updatedNode.label = updatedNode.label + tt }
+      else if (updatedNode.label.indexOf(tt) > 0) { updatedNode.label = tt + updatedNode.label.replace(tt, "") }
+      else if (updatedNode.label.indexOf(tt) == 0) { updatedNode.label = updatedNode.label.replace(tt, "") }
+
+      nodesData.update(updatedNode);
+   }
+   var simplifyButton = document.getElementById('simplify');
+
+   simplifyButton.addEventListener('click', function () {
+      simplifyNetwork();
+   });
+
+   function simplifyNetwork() {
+      var nodesToRemove = [];
+      var allNodeIds = nodesData.getIds();
+
+      allNodeIds.forEach(function (nodeID) {
+         if (nodesData.get(nodeID) !== null) { // 노드가 존재하는지 확인
+            var connectedEdges = network.getConnectedEdges(nodeID);
+            if (connectedEdges.length === 2 && isLastCharUpperCase(nodeID) == false && !nodeID.includes('JB') && !nodeID.includes('_') && !endnodes.includes(nodeID)) {
+               var edge1 = edgesData.get(connectedEdges[0]);
+               var edge2 = edgesData.get(connectedEdges[1]);
+               var newEdgeLength = parseFloat((parseFloat(edge1.label) + parseFloat(edge2.label)).toFixed(2)); // 수정된 부분
+               if (edge1.from == edge2.from) {
+                  var newEdge = { id: edge1.to + "_" + edge2.to, from: edge1.to, to: edge2.to, label: newEdgeLength.toString() }
+               }
+               else if (edge1.from == edge2.to) {
+                  var newEdge = { id: edge1.to + "_" + edge2.from, from: edge1.to, to: edge2.from, label: newEdgeLength.toString() }
+               }
+               else if (edge1.to == edge2.from) {
+                  var newEdge = { id: edge1.from + "_" + edge2.to, from: edge1.from, to: edge2.to, label: newEdgeLength.toString() }
+               }
+               else if (edge1.to == edge2.to) {
+                  var newEdge = { id: edge1.from + "_" + edge2.from, from: edge1.from, to: edge2.from, label: newEdgeLength.toString() }
+               }
+               edgesData.remove(connectedEdges);
+               edgesData.add(newEdge);
+               nodesToRemove.push(nodeID);
+               nodesData.remove(nodeID);
+            }
+            else if (connectedEdges.length === 0) {
+               nodesData.remove(nodeID);
+            }
+         }
+      });
+
+      //nodesData.remove(nodesToRemove);
+   }
+
+   function fontsizechange(operation, nodeID) {
+      // 노드를 순회하며 폰트 크기를 변경합니다.
+      if (nodeID == "all") {
+         nodesData.forEach(node => {
+            // 현재 노드의 폰트 크기를 가져옵니다.
+            //console.log(node)
+            if (!node.font) {
+               node.font = {}
+            }
+            if (!node.font.size) {
+               node.font.size = 12
+            }
+            let currentFontSize = node.font.size
+
+            // 연산에 따라 폰트 크기를 조정합니다.
+            if (operation === '+') {
+               currentFontSize += 1;
+            } else if (operation === '-') {
+               currentFontSize -= 1;
+               if (currentFontSize < 1) currentFontSize = 1; // 폰트 크기는 최소 1 이상이어야 합니다.
+            }
+
+            // 변경된 폰트 크기를 적용합니다.
+            node.font.size = currentFontSize;
+            nodesData.update(node);
+
+         });
+      }
+      else {
+         selectedNodeId.forEach(function (id) {
+            var updatedNode = nodesData.get(id);
+            if (!updatedNode.font) {
+               updatedNode.font = {}
+            }
+            if (!updatedNode.font.size) {
+               updatedNode.font.size = 12
+            }
+            if (operation === '+') {
+               updatedNode.font.size += 1;
+            } else if (operation === '-') {
+               updatedNode.font.size -= 1;
+               if (updatedNode.font.size < 1) updatedNode.font.size = 1; // 폰트 크기는 최소 1 이상이어야 합니다.
+            }
+            nodesData.update(updatedNode);
+         })
+      }
+   }
+
+
+   const saveButton = document.getElementById("saveButton");
+
+   saveButton.addEventListener("click", function () {
+      const titleInput = document.getElementById("title");
+      const title = titleInput.value;
+
+      if (!title) {
+         alert("Title을 입력해주세요.");
+         return;
+      }
+
+      const nodePositions = network.getPositions(); // 노드 위치 정보를 가져옵니다.// 노드 위치 정보를 가져옵니다.
+      const currentNodes = nodesData.get(); // 현재 네트워크의 노드 정보를 가져옵니다.
+      const currentEdges = edgesData.get(); // 현재 네트워크의 엣지 정보를 가져옵니다.
+      const data = {
+         title: title,
+         ship: shipnum, // 호선 정보를 가져올 수 있는 코드로 변경해야 합니다.
+         nodes: currentNodes, // 노드 정보를 포함하고 있는 배열입니다.
+         edges: currentEdges, // 엣지 정보를 포함하고 있는 배열입니다.
+         nodepos: nodePositions
+      };
+
+      // 서버에 요청을 전송하고, 저장 결과를 처리합니다.
+      fetch("/save_node_positions", {
+         method: "POST",
+         headers: {
+            "Content-Type": "application/json"
+         },
+         body: JSON.stringify(data)
+      })
+         .then(response => response.json())
+         .then(data => {
+            if (data.status === "success") {
+               alert("노드 위치 정보와 Title이 저장되었습니다.");
+            } else {
+               alert("노드 위치 정보와 Title 저장에 실패했습니다.");
+            }
+         });
+   });
+
+   document.getElementById("load-mymap").addEventListener("click", function () {
+      const selectedTitleAndShip = document.getElementById("mymap-title").value;
+      const [selectedShip, selectedTitle] = selectedTitleAndShip.split(" "); // "ship title"을 분리하여 배열로 변환합니다.
+
+      // 서버에 선택한 MyMap을 불러오는 요청을 보냅니다.
+      fetch(`/load_mymap?ship=${selectedShip}&title=${selectedTitle}`)
+         .then(response => response.json())
+         .then(data => {
+            if (data.status === "success") {
+               // 데이터베이스에서 가져온 정보를 사용하여 그래프를 업데이트합니다.
+
+               // 기존 노드와 엣지 데이터를 비웁니다.
+               nodesData.clear();
+               edgesData.clear();
+               shipnum = selectedShip
+
+               var nodes_set2 = new Set();
+               var fixnode = new Set();
+
+               data.nodes.forEach(function (node) {
+                  var ol = node.label
+                  var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+                  var newlabel2 = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
+                  if (!nodes_set2.has(newlabel2)) {
+                     nodes_set2.add(newlabel2)
+                  }
+                  else {
+                     fixnode.add(newlabel2)
+                  }
+               })
+
+               // 새로운 노드와 엣지 데이터를 추가합니다.
+               data.nodes.forEach(function (node) {
+                  var ol = node.label
+                  var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+                  var newlabel2 = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
+                  if (fixnode.has(newlabel2)) {
+                     node.label = newlabel
+                  }
+                  else {
+                     node.label = newlabel2
+                  }
+               })
+               nodesData.add(data.nodes);
+               edgesData.add(data.edges);
+               network.setOptions({ physics: { enabled: false } });
+               document.getElementsByName("physicsEnabled")[0].checked = false
+               // 네트워크 인스턴스를 새 노드와 엣지로 업데이트합니다.
+               network.setData({ nodes: nodesData, edges: edgesData });
+
+               // 노드 위치를 데이터베이스에서 가져온 정보로 업데이트합니다.
+               for (const nodeId in data.node_positions) {
+                  network.moveNode(nodeId, data.node_positions[nodeId].x, data.node_positions[nodeId].y);
+               }
+            } else {
+               alert("선택한 MyMap을 불러오는 데 실패했습니다.");
+            }
+         });
+   });
+
+
+
+
+
+   // 옵션 폼에 이벤트 리스너 추가
+   document.getElementById('optionsForm').addEventListener('input', function (event) {
+      const target = event.target;
+      switch (target.name) {
+         case 'nodeColor':
+            updateNodeColor(target.value);
+            break;
+         case 'nodeSize':
+            updateNodeSize(target.value);
+            break;
+         case 'edgeColor':
+            updateEdgeColor(target.value);
+            break;
+         case 'edgeWidth':
+            updateEdgeWidth(target.value);
+            break;
+         case 'physicsEnabled':
+            updatePhysicsEnabled(target.checked);
+            break;
+         case 'gravitationalConstant':
+            updateGravitationalConstant(target.value);
+            break;
+         case 'centralGravity':
+            updateCentralGravity(target.value);
+            break;
+         case 'springConstant':
+            updateSpringConstant(target.value);
+            break;
+         case 'damping':
+            updateDamping(target.value);
+            break;
+         case 'avoidOverlap':
+            updateAvoidOverlap(target.value);
+            break;
+         case 'iterations':
+            updateIterations(target.value);
+            break;
+      }
+   });
+
+   function updatePhysicsEnabled(enabled) { network.setOptions({ physics: { enabled: enabled } }); }
+
+   function updateGravitationalConstant(value) { network.setOptions({ physics: { barnesHut: { gravitationalConstant: Number(value) } } }); }
+
+   function updateCentralGravity(value) { network.setOptions({ physics: { barnesHut: { centralGravity: Number(value) } } }); }
+
+   function updateSpringLength(value) { network.setOptions({ physics: { barnesHut: { springLength: Number(value) } } }); }
+
+   function updateSpringConstant(value) { network.setOptions({ physics: { barnesHut: { springConstant: Number(value) } } }); }
+
+   function updateDamping(value) { network.setOptions({ physics: { barnesHut: { damping: Number(value) } } }); }
+
+   function updateAvoidOverlap(value) { network.setOptions({ physics: { barnesHut: { avoidOverlap: Number(value) } } }); }
+
+   function updateIterations(value) { network.setOptions({ physics: { stabilization: { iterations: Number(value) } } }); }
+   function updateNodeColor(color) { nodesData.update(nodesData.get().map(node => ({ id: node.id, color: color }))); }
+
+   function updateNodeSize(size) { var updatedNodes = nodesData.get().map(node => { return { id: node.id, size: Number(size) }; }); nodesData.update(updatedNodes); }
+
+   function updateEdgeColor(color) { edgesData.update(edgesData.get().map(edge => ({ id: edge.id, color: { color: color } }))); }
+
+   function updateEdgeWidth(width) { edgesData.update(edgesData.get().map(edge => ({ id: edge.id, width: Number(width) }))); }
+
+   var es = '        ';
+   function setting_1() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.font.vadjust = - 85
+         updatedNode.label = updatedNode.label.replace(es, "") + es
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_2() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.font.vadjust = - 85
+         updatedNode.label = updatedNode.label.replace(es, "")
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_3() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.font.vadjust = - 85
+         updatedNode.label = es + updatedNode.label.replace(es, "")
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_4() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.font.vadjust = 0
+         updatedNode.label = updatedNode.label.replace(es, "") + es
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_5() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.font.vadjust = 0
+         updatedNode.label = updatedNode.label.replace(es, "")
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_6() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.font.vadjust = 0
+         updatedNode.label = es + updatedNode.label.replace(es, "")
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_N1() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.size = 5
+         updatedNode.shadow.enabled = false
+         updatedNode.color = "#737373"
+         updatedNode.font.size = 30
+         updatedNode.font.bold.mod = ""
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_N2() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.size = 12
+         updatedNode.shadow.enabled = true
+         updatedNode.color = "blue"
+         updatedNode.font.size = 38
+         updatedNode.font.color = "black"
+         updatedNode.font.bold.mod = "bold"
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_N3() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.size = 12
+         updatedNode.shadow.enabled = true
+         updatedNode.color = "yellow"
+         updatedNode.font.size = 38
+         updatedNode.font.bold.mod = "bold"
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_N4() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedNodes.forEach((nodeId) => {
+         var updatedNode = nodesData.get(nodeId);
+         updatedNode.size = 12
+         updatedNode.shadow.enabled = true
+         updatedNode.color = "red"
+         updatedNode.font.size = 38
+         updatedNode.font.bold.mod = "bold"
+         nodesData.update(updatedNode)
+      });
+   }
+   function setting_E1() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedEdges.forEach((edgeId) => {
+         var updatedEdge = edgesData.get(edgeId);
+         updatedEdge.color = { color: "#7d7d7d" }
+         edgesData.update(updatedEdge)
+      });
+   }
+   function setting_E2() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedEdges.forEach((edgeId) => {
+         var updatedEdge = edgesData.get(edgeId);
+         updatedEdge.color = { color: "blue" }
+         updatedEdge.width = 5
+         edgesData.update(updatedEdge)
+      });
+   }
+   function setting_E3() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedEdges.forEach((edgeId) => {
+         var updatedEdge = edgesData.get(edgeId);
+         updatedEdge.color = { color: "#ffa200" }
+         updatedEdge.width = 5
+         edgesData.update(updatedEdge)
+      });
+   }
+   function setting_E4() {
+      var selectedNodes = network.getSelectedNodes();
+      var selectedEdges = network.getSelectedEdges();
+      selectedEdges.forEach((edgeId) => {
+         var updatedEdge = edgesData.get(edgeId);
+         updatedEdge.color = { color: "red" }
+         updatedEdge.width = 5
+         edgesData.update(updatedEdge)
+      });
+   }
+   let sn = null;
+   let labelAdjustHandle = document.getElementById('labelAdjustHandle');
+   let labelAdjustPad = document.getElementById('labelAdjustPad');
+   let adjustingLabel = false;
+   let snlabel = null;
+   let s = ' ';
+   String.prototype.replaceAll = function (org, dest) {
+      return this.split(org).join(dest);
+   }
+   network.on("selectNode", function (params) {
+      if (params.nodes.length === 0) return;
+
+      sn = nodesData.get(params.nodes[0]);
+      let tempElement = document.createElement("div");
+      tempElement.innerHTML = sn.label;
+      snlabel = tempElement.innerText;
+      target = snlabel.replaceAll(s, '');
+
+      let leftSCount = 0;
+      let rightSCount = 0;
+
+      let leftIndex = snlabel.indexOf(target);
+      let rightIndex = snlabel.lastIndexOf(target);
+
+      if (leftIndex > 0) {
+         for (let i = 0; i < leftIndex; i++) {
+            if (snlabel[i] === s) {
+               leftSCount++;
+            }
+         }
+      }
+
+      if (rightIndex >= 0 && rightIndex < snlabel.length - 'text'.length) {
+         for (let i = rightIndex + 'text'.length; i < snlabel.length; i++) {
+            if (snlabel[i] === s) {
+               rightSCount++;
+            }
+         }
+      }
+
+      console.log(target, leftSCount, rightSCount)
+
+      snlabel = snlabel.replaceAll(s, '');
+
+      labelAdjustPad.style.display = 'block';
+
+      // 패드 위치 설정
+      let position = network.canvasToDOM({ x: sn.x, y: sn.y });
+      labelAdjustPad.style.left = (position.x - 50) + 'px';
+      labelAdjustPad.style.top = (position.y - 50) + 'px';
+
+      // 핸들 위치 설정
+      labelAdjustHandle.style.left = '50px';
+      if (leftSCount > 0) {
+         labelAdjustHandle.style.left = (50 + (leftSCount * 10)) + 'px';
+      }
+      else if (rightSCount > 0) {
+         labelAdjustHandle.style.left = (50 - (rightSCount * 10)) + 'px';
+
+      }
+      labelAdjustHandle.style.top = (100 + sn.font.vadjust) + 'px';
+   });
+
+   network.on("deselectNode", function (params) {
+      labelAdjustPad.style.display = 'none';
+      sn = null;
+   });
+
+   // 드래그 이벤트 처리
+   labelAdjustHandle.addEventListener('mousedown', function (event) {
+      adjustingLabel = true;
+   });
+
+   document.addEventListener('mousemove', function (event) {
+      if (!adjustingLabel || !sn) return;
+
+      let padPosition = labelAdjustPad.getBoundingClientRect();
+      let handleX = event.clientX - padPosition.left;
+      let handleY = event.clientY - padPosition.top;
+
+      // 위치 업데이트
+      sn.font.vadjust = handleY - 100;
+      let numSpaces = Math.round((handleX - 50) / 10);
+      let result = snlabel;
+      if (numSpaces >= 0) {
+         for (let i = 0; i < numSpaces; i++) {
+            result = s + result
+         }
+      }
+      else {
+         for (let i = 0; i < Math.abs(numSpaces); i++) {
+            result = result + s
+         }
+      }
+      sn.label = '<b>' + result + '</b>'
+
+      nodesData.update(sn);
+
+      // 핸들 위치 업데이트
+      labelAdjustHandle.style.left = handleX + 'px';
+      labelAdjustHandle.style.top = handleY + 'px';
+   });
+
+   document.addEventListener('mouseup', function (event) {
+      adjustingLabel = false;
+   });
+
+
+
+   // 공백 문자 수 계산 함수
+   function getSpaceWidth(label) {
+      return (label.match(/[\u00A0]/g) || []).length * 10;
+   }
+
+   labelAdjustPad.addEventListener('wheel', function (event) {
+      if (!sn) return;
+      // 기본 스크롤 동작을 막습니다.
+      event.preventDefault();
+      // 쉬프트 키를 누른 상태에서 마우스 휠을 사용한 경우 노드 크기 조절
+      if (event.shiftKey) {
+         const delta = Math.sign(event.deltaY);
+         sn.size = Math.max(sn.size - delta, 1); // 최소 크기는 1로 설정
+         nodesData.update(sn);
+      } else { // 쉬프트 키를 누르지 않은 상태에서 마우스 휠 사용 시 글자 크기 조절
+         if (event.deltaY < 0) {
+            sn.font.size += 1;
+         } else if (event.deltaY > 0) {
+            sn.font.size -= 1;
+         }
+
+         // 글자 크기가 너무 작아지지 않도록 최소값 설정
+         if (sn.font.size < 1) {
+            sn.font.size = 1;
+         }
+
+         // 변경된 글자 크기를 적용하고 노드 데이터를 업데이트합니다.
+         nodesData.update(sn);
+      }
+   });
+   const colorButtons = document.querySelectorAll('.colorButton');
+   const colorButtons2 = document.querySelectorAll('.colorButton2');
+
+   colorButtons.forEach(button => {
+      button.addEventListener('click', function (event) {
+         if (!sn) return;
+
+         const color = event.target.getAttribute('data-color');
+         sn.color = {
+            border: color,
+            background: color,
+            highlight: {
+               border: color,
+               background: color
+            },
+            hover: {
+               border: color,
+               background: color
+            }
+         };
+
+         nodesData.update(sn);
+      });
+   });
+   colorButtons2.forEach(button => {
+      button.addEventListener('click', function (event) {
+         if (!sn) return;
+
+         const color = event.target.getAttribute('data-color2');
+         sn.font.color = color;
+
+         nodesData.update(sn);
+      });
+   });
+   function getNetworkBoundingBox(network) {
+      const nodes = network.getPositions();
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      for (const nodeId in nodes) {
+         const node = nodes[nodeId];
+         minX = Math.min(minX, node.x);
+         minY = Math.min(minY, node.y);
+         maxX = Math.max(maxX, node.x);
+         maxY = Math.max(maxY, node.y);
+      }
+
+      return {
+         left: minX,
+         top: minY,
+         right: maxX,
+         bottom: maxY,
+      };
+   }
+
+
+   function downloadFullNetworkImage() {
+      const nodeIds = network.body.nodeIndices;
+      const nodes = network.body.nodes;
+      const edges = network.body.edges;
+      const padding = 20;
+
+      // 네트워크의 bounding box를 계산합니다.
+      const boundingBox = getNetworkBoundingBox(network);
+
+
+      // 캔버스 크기를 조정하여 전체 네트워크를 그릴 수 있는 충분한 공간을 확보합니다.
+      const canvas = document.createElement("canvas");
+      canvas.width = boundingBox.right - boundingBox.left + padding * 2;
+      canvas.height = boundingBox.bottom - boundingBox.top + padding * 2;
+      const ctx = canvas.getContext("2d");
+
+      // 배경색을 설정합니다.
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 각 엣지를 그립니다.
+      for (const edge of Object.values(edges)) {
+         const fromNode = nodes[edge.fromId];
+         const toNode = nodes[edge.toId];
+         const fromPoint = network.canvasToDOM({ x: fromNode.x, y: fromNode.y });
+         const toPoint = network.canvasToDOM({ x: toNode.x, y: toNode.y });
+
+         ctx.beginPath();
+         ctx.moveTo(fromPoint.x - boundingBox.left + padding, fromPoint.y - boundingBox.top + padding);
+         ctx.lineTo(toPoint.x - boundingBox.left + padding, toPoint.y - boundingBox.top + padding);
+         ctx.lineWidth = edge.options.width;
+         ctx.strokeStyle = edge.options.color.color;
+         ctx.stroke();
+      }
+
+      // 각 노드를 그립니다.
+      for (const node of Object.values(nodes)) {
+         const point = network.canvasToDOM({ x: node.x, y: node.y });
+
+         ctx.beginPath();
+         ctx.arc(point.x - boundingBox.left + padding, point.y - boundingBox.top + padding, node.options.size, 0, 2 * Math.PI, false);
+         ctx.fillStyle = node.options.color.background;
+         ctx.fill();
+         ctx.lineWidth = node.options.borderWidth;
+         ctx.strokeStyle = node.options.color.border;
+         ctx.stroke();
+
+         // 노드의 라벨을 그립니다.
+         ctx.font = `${node.options.font.size}px ${node.options.font.face}`;
+         ctx.fillStyle = node.options.font.color;
+         ctx.textAlign = "center";
+         ctx.textBaseline = "middle";
+         ctx.fillText(node.options.label, point.x - boundingBox.left + padding, point.y - boundingBox.top +
+            padding + node.options.font.size * 0.5);
+
+      }
+
+      // 이미지를 다운로드합니다.
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = "network.png";
+      link.click();
+   }
+
+
+
+
+
+
+
+</script>
+
+</html>

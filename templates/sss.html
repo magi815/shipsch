@@ -1,0 +1,87 @@
+<div class="toggle-switch">
+    <input type="checkbox" id="toggle-left" class="toggle-input" onclick="toggleSwitch('left')">
+    <label for="toggle-left" class="toggle-label toggle-label-left">check</label>
+
+    <input type="checkbox" id="toggle-right" class="toggle-input" onclick="toggleSwitch('right')">
+    <label for="toggle-right" class="toggle-label toggle-label-right">uncheck</label>
+</div>
+
+<style>
+    .toggle-switch {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 16px;
+        border: 1px solid #bbb;
+        overflow: hidden;
+        position: relative;
+        font-size: 14px;
+    }
+
+    .toggle-switch .toggle-label {
+        width: 60px;
+        text-align: center;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .toggle-switch .toggle-label-left {
+        border-radius: 15px 0 0 15px;
+    }
+
+    .toggle-switch .toggle-label-right {
+        border-radius: 0 15px 15px 0;
+    }
+
+    .toggle-switch .toggle-input {
+        display: none;
+    }
+
+    .toggle-switch .toggle-slider {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        height: 28px;
+        width: calc(100% / 3 - 4px);
+        background-color: #fff;
+        border-radius: 15px;
+        box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s;
+    }
+
+    .toggle-switch #toggle-right:checked~.toggle-slider {
+        left: calc(100% / 3 * 2 + 2px);
+    }
+
+    .toggle-switch #toggle-left:checked~.toggle-slider {
+        left: 2px;
+    }
+
+    .toggle-switch #toggle-left:checked~.toggle-label-left,
+    .toggle-switch #toggle-right:checked~.toggle-label-right {
+        color: #fff;
+        background-color: #007bff;
+    }
+</style>
+
+<script>
+    function toggleSwitch(direction) {
+        switch (direction) {
+            case 'left':
+                document.getElementById('toggle-right').checked = false;
+                break;
+            case 'right':
+                document.getElementById('toggle-left').checked = false;
+                break;
+            default:
+                break;
+        }
+        var a = 0;
+        if (document.getElementById('toggle-right').checked == true) {
+            a = 2
+        }
+        else if (document.getElementById('toggle-left').checked == true) {
+            a = 1
+        }
+        alert(a)
+    }
+</script>
