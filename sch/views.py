@@ -216,13 +216,44 @@ def map_main(request):
                 nodepath = row['NodePATH'].strip()
                 nodelen = row['길이Node']
                 if nodepath is not None:
-                    split_node = nodepath.split(" ")
+                    split_node2 = nodepath.split(" ")
+                    split_node = []
+                    for i in range(len(split_node2)):
+                        if i == 0 or split_node2[i] != split_node2[i - 1]:
+                            split_node.append(split_node2[i])
+
                     if node in nodepath:
                         for i, element in enumerate(split_node):
-                            
                             if i == 0 or  i == len(split_node)-1:
                                 if split_node[i] not in endnodes:
                                     endnodes.append(split_node[i])
+                                if node in split_node[i] and not split_node[i][-1].isalpha():
+                                    if i == 0 and ("JB" in row['FromEquipment'] or "CABINET" in row['FromEquipment'] or "STARTER" in row['FromEquipment'] or "PANEL" in row['FromEquipment'] or "FVT" in row['FromEquipment'] ) :
+                                        c = 1
+                                        if [row['FromEquipment'], split_node[i],c] not in edges and [split_node[i], row['FromEquipment'],c] not in edges :
+                                            edges.append([row['FromEquipment'], split_node[i],c])
+                                        nodes_set.add(split_node[i])
+                                        nodes_set.add(row['FromEquipment'])
+                                    elif i == len(split_node)-1 and ("JB" in row['ToEquipment'] or "CABINET" in row['ToEquipment'] or "STARTER" in row['ToEquipment'] or "PANEL" in row['ToEquipment'] or "FVT" in row['ToEquipment'] ) :
+                                        c = 1
+                                        if [row['ToEquipment'], split_node[i],c] not in edges and [split_node[i], row['ToEquipment'],c] not in edges :
+                                            edges.append([row['ToEquipment'], split_node[i],c])
+                                        nodes_set.add(split_node[i])
+                                        nodes_set.add(row['ToEquipment'])
+
+                                    elif nodelen is not None:
+                                        if i == 0 :
+                                            c = row['FromLength']
+                                        elif i == len(split_node)-1:
+                                            c = row['ToLength']
+                                        if [row['Circuit'], split_node[i],c] not in edges and [split_node[i], row['Circuit'],c] not in edges :
+                                            edges.append([row['Circuit'], split_node[i],c]) 
+                                    else:
+                                        if [row['Circuit'], split_node[i],1] not in edges and [split_node[i], row['Circuit'],1] not in edges :
+                                            edges.append([row['Circuit'], split_node[i],1]) 
+                                    nodes_set.add(split_node[i])
+                                    nodes_set.add(row['Circuit'])
+
                             if i < len(split_node)-1:
                                 if node in split_node[i] and node in split_node[i+1]:
                                     if nodelen is not None:                            
@@ -404,3 +435,6 @@ def update_checked(request,num):
         # POST 요청이 아닐 경우, JsonResponse를 반환
         response = {'status': 'fail'}
     return JsonResponse(response)
+
+
+

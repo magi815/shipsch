@@ -281,14 +281,14 @@
                      <div class="form-group">
                         <label>
                            Gravitational Constant:
-                           <input type="number" name="gravitationalConstant" id="gravitationalConstant" value="-2000"
+                           <input type="number" name="gravitationalConstant" id="gravitationalConstant" value="-2500"
                               step="100" min="-10000">
                         </label>
                      </div>
                      <div class="form-group">
                         <label>
                            Central Gravity:
-                           <input type="number" name="centralGravity" id="centralGravity" value="0.3" step="0.1"
+                           <input type="number" name="centralGravity" id="centralGravity" value="0.6" step="0.1"
                               min="0">
                         </label>
                      </div>
@@ -301,7 +301,7 @@
                      <div class="form-group">
                         <label>
                            Spring Constant:
-                           <input type="number" name="springConstant" id="springConstant" value="0.04" step="0.01"
+                           <input type="number" name="springConstant" id="springConstant" value="0.07" step="0.01"
                               min="0">
                         </label>
                      </div>
@@ -399,7 +399,11 @@
       if (!nodes_set2.has(from_node)) {
          nodes_set2.add(from_node);
 
-         var newlabel = from_node.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+         if (from_node.startsWith(selectedTitle)) {
+            from_node = from_node.replace(selectedTitle, "");
+         }
+
+         var newlabel = from_node.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
          newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
          if (allnode.has(newlabel)) {
             fixnode.add(from_node)
@@ -407,9 +411,12 @@
          else { allnode.add(newlabel); }
       }
       if (!nodes_set2.has(to_node)) {
-         nodes_set2.add(newlabel);
+         nodes_set2.add(to_node);
 
-         var newlabel = to_node.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+         if (to_node.startsWith(selectedTitle)) {
+            to_node = to_node.replace(selectedTitle, "");
+         }
+         var newlabel = to_node.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
          newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
          if (allnode.has(newlabel)) {
             fixnode.add(to_node)
@@ -431,10 +438,16 @@
       if (!nodes_set.has(from_node)) {
          var ol = `<b>${from_node}</b>`
          if (fixnode.has(from_node)) {
-            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+            if (from_node.startsWith(selectedTitle)) {
+               ol = ol.replace(selectedTitle, "");
+            }
+            var newlabel = ol.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J").replace("L-L", "L").replace("L-E", "E")
          }
          else {
-            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+            if (from_node.startsWith(selectedTitle)) {
+               ol = ol.replace(selectedTitle, "");
+            }
+            var newlabel = ol.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J").replace("L-L", "L").replace("L-E", "E")
             newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
          }
          nodes_set.add(from_node);
@@ -442,27 +455,35 @@
             id: from_node,
             label: newlabel,
             shadow: {
-               enabled: isLastCharUpperCase(from_node),
+               enabled: false,//from_node.includes('F-FD') ? 'false' : from_node.includes('JB') ? 'true' : from_node.includes('L-L') ? 'true' : from_node.includes('L-E') ? 'true' : isLastCharUpperCase(from_node) ? 'true' : "false",
                color: 'red',
                size: 10,
                x: 0,
                y: 0
             },
-            size: isLastCharUpperCase(from_node) ? 10 : 5, // 조건부 설정
+            size: from_node.includes('JB') ? 12 : from_node.includes('F-FD') ? 10 : from_node.includes('L-L') ? 11 : from_node.includes('L-E') ? 11 : isLastCharUpperCase(from_node) ? 12 : 5, // 조건부 설정
+            color: from_node.includes('JB') ? 'green' : from_node.includes('F-FD') ? "#8B00FF" : from_node.includes('L-L') ? 'yellow' : from_node.includes('L-E') ? 'red' : isLastCharUpperCase(from_node) ? 'blue' : "#737373",
             font: {
                multi: 'html',
-               size: isLastCharUpperCase(from_node) ? 15 : from_node.includes('JB') ? 14 : 12,
-               bold: { mod: isLastCharUpperCase(from_node) ? 'bold' : from_node.includes('JB') ? 'bold' : "" }
+               size: from_node.includes('JB') ? 38 : from_node.includes('F-FD') ? 32 : from_node.includes('L-L') ? 38 : from_node.includes('L-E') ? 38 : isLastCharUpperCase(from_node) ? 38 : 29,
+               color: from_node.includes('JB') ? 'green' : from_node.includes('F-FD') ? "#8B00FF" : from_node.includes('L-L') ? 'green' : from_node.includes('L-E') ? 'red' : isLastCharUpperCase(from_node) ? 'blue' : 'black',
+               bold: { mod: from_node.includes('JB') ? 'bold' : from_node.includes('F-FD') ? 'bold' : from_node.includes('L-L') ? 'bold' : from_node.includes('L-E') ? 'bold' : isLastCharUpperCase(from_node) ? 'bold' : "" }
             }
          });
       }
       if (!nodes_set.has(to_node)) {
          var ol = `<b>${to_node}</b>`
          if (fixnode.has(to_node)) {
-            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+            if (to_node.startsWith(selectedTitle)) {
+               ol = ol.replace(selectedTitle, "");
+            }
+            var newlabel = ol.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J").replace("L-L", "L").replace("L-E", "E")
          }
          else {
-            var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+            if (to_node.startsWith(selectedTitle)) {
+               ol = ol.replace(selectedTitle, "");
+            }
+            var newlabel = ol.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J").replace("L-L", "L").replace("L-E", "E")
             newlabel = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
          }
          nodes_set.add(to_node);
@@ -470,17 +491,19 @@
             id: to_node,
             label: newlabel,
             shadow: {
-               enabled: isLastCharUpperCase(to_node),
+               enabled: false,// to_node.includes('F-FD') ? false : to_node.includes('JB') ? true : to_node.includes('L-L') ? true : to_node.includes('L-E') ? true : isLastCharUpperCase(to_node) ? true : false,
                color: 'red',
                size: 10,
                x: 0,
                y: 0
             },
-            size: isLastCharUpperCase(to_node) ? 10 : 5, // 조건부 설정
+            size: to_node.includes('JB') ? 12 : to_node.includes('F-FD') ? 10 : to_node.includes('L-L') ? 11 : to_node.includes('L-E') ? 11 : isLastCharUpperCase(to_node) ? 12 : 5, // 조건부 설정
+            color: to_node.includes('JB') ? 'green' : to_node.includes('F-FD') ? "#8B00FF" : to_node.includes('L-L') ? 'yellow' : to_node.includes('L-E') ? 'red' : isLastCharUpperCase(to_node) ? 'blue' : "#737373",
             font: {
                multi: 'html',
-               size: isLastCharUpperCase(to_node) ? 15 : to_node.includes('JB') ? 14 : 12,
-               bold: { mod: isLastCharUpperCase(to_node) ? 'bold' : to_node.includes('JB') ? 'bold' : "" }
+               size: to_node.includes('JB') ? 38 : to_node.includes('F-FD') ? 32 : to_node.includes('L-L') ? 38 : to_node.includes('L-E') ? 38 : isLastCharUpperCase(to_node) ? 38 : 29,
+               color: to_node.includes('JB') ? 'green' : to_node.includes('F-FD') ? "#8B00FF" : to_node.includes('L-L') ? 'green' : to_node.includes('L-E') ? 'red' : isLastCharUpperCase(to_node) ? 'blue' : 'black',
+               bold: { mod: to_node.includes('JB') ? 'bold' : to_node.includes('F-FD') ? 'bold' : to_node.includes('L-L') ? 'bold' : to_node.includes('L-E') ? 'bold' : isLastCharUpperCase(to_node) ? 'bold' : "" }
             }
          });
       }
@@ -507,10 +530,10 @@
          solver: 'barnesHut',
          enabled: true, // 물리 시뮬레이션을 사용합니다.
          barnesHut: {
-            gravitationalConstant: -5000, // 중력 상수를 감소시켜 노드간 거리를 늘립니다.
-            centralGravity: 0.1, // 중심 중력을 줄여서 노드가 더 떨어지게 합니다.
+            gravitationalConstant: -2700, // 중력 상수를 감소시켜 노드간 거리를 늘립니다.
+            centralGravity: 0.6, // 중심 중력을 줄여서 노드가 더 떨어지게 합니다.
             springLength: 200, // 기본적으로 사용할 엣지 길이를 설정합니다.
-            springConstant: 0.01, // 스프링 상수를 줄여서 엣지의 길이 영향력을 높입니다.
+            springConstant: 0.07, // 스프링 상수를 줄여서 엣지의 길이 영향력을 높입니다.
             damping: 0.09,
             avoidOverlap: 0.1
          },
@@ -826,22 +849,28 @@
             id: newNodeval,
             label: `<b>${newNodeval}</b>`,
             shadow: {
-               enabled: isLastCharUpperCase(newNodeval),
+               enabled: false,// to_node.includes('F-FD') ? false : to_node.includes('JB') ? true : to_node.includes('L-L') ? true : to_node.includes('L-E') ? true : isLastCharUpperCase(to_node) ? true : false,
                color: 'red',
                size: 10,
                x: 0,
                y: 0
             },
-            size: isLastCharUpperCase(newNodeval) ? 10 : 5, // 조건부 설정
+            size: newNodeval.includes('JB') ? 12 : newNodeval.includes('FD') ? 10 : newNodeval.includes('L-L') ? 11 : newNodeval.includes('L-E') ? 11 : isLastCharUpperCase(newNodeval) ? 12 : 5, // 조건부 설정
+            color: newNodeval.includes('JB') ? 'green' : newNodeval.includes('FD') ? "#8B00FF" : newNodeval.includes('L-L') ? 'yellow' : newNodeval.includes('L-E') ? 'red' : isLastCharUpperCase(newNodeval) ? 'blue' : "#737373",
             font: {
                multi: 'html',
-               size: isLastCharUpperCase(newNodeval) ? 15 : newNodeval.includes('JB') ? 14 : 12,
-               bold: { mod: isLastCharUpperCase(newNodeval) ? 'bold' : newNodeval.includes('JB') ? 'bold' : "" }
+               size: newNodeval.includes('JB') ? 38 : newNodeval.includes('FD') ? 32 : newNodeval.includes('L-L') ? 38 : newNodeval.includes('L-E') ? 38 : isLastCharUpperCase(newNodeval) ? 38 : 29,
+               color: newNodeval.includes('JB') ? 'green' : newNodeval.includes('FD') ? "#8B00FF" : newNodeval.includes('L-L') ? 'green' : newNodeval.includes('L-E') ? 'red' : isLastCharUpperCase(newNodeval) ? 'blue' : 'black',
+               bold: { mod: newNodeval.includes('JB') ? 'bold' : newNodeval.includes('FD') ? 'bold' : newNodeval.includes('L-L') ? 'bold' : newNodeval.includes('L-E') ? 'bold' : isLastCharUpperCase(newNodeval) ? 'bold' : "" }
             },
             x: (nodePosition1.x + nodePosition2.x) / 2,
             y: (nodePosition1.y + nodePosition2.y) / 2,
+         };
 
-         }
+
+
+
+
          edgesData.remove(edge);
          nodesData.add(newNode);
          var newEdge1 = {
@@ -875,17 +904,19 @@
             id: newNodeval,
             label: `<b>${newNodeval}</b>`,
             shadow: {
-               enabled: isLastCharUpperCase(newNodeval),
+               enabled: false,
                color: 'red',
                size: 10,
                x: 0,
                y: 0
             },
-            size: isLastCharUpperCase(newNodeval) ? 10 : 5, // 조건부 설정
+            size: newNodeval.includes('JB') ? 12 : newNodeval.includes('FD') ? 10 : newNodeval.includes('L-L') ? 11 : newNodeval.includes('L-E') ? 11 : isLastCharUpperCase(newNodeval) ? 12 : 5, // 조건부 설정
+            color: newNodeval.includes('JB') ? 'green' : newNodeval.includes('FD') ? "#8B00FF" : newNodeval.includes('L-L') ? 'yellow' : newNodeval.includes('L-E') ? 'red' : isLastCharUpperCase(newNodeval) ? 'blue' : "#737373",
             font: {
                multi: 'html',
-               size: isLastCharUpperCase(newNodeval) ? 15 : newNodeval.includes('JB') ? 14 : 12,
-               bold: { mod: isLastCharUpperCase(newNodeval) ? 'bold' : newNodeval.includes('JB') ? 'bold' : "" }
+               size: newNodeval.includes('JB') ? 38 : newNodeval.includes('FD') ? 32 : newNodeval.includes('L-L') ? 38 : newNodeval.includes('L-E') ? 38 : isLastCharUpperCase(newNodeval) ? 38 : 29,
+               color: newNodeval.includes('JB') ? 'green' : newNodeval.includes('FD') ? "#8B00FF" : newNodeval.includes('L-L') ? 'green' : newNodeval.includes('L-E') ? 'red' : isLastCharUpperCase(newNodeval) ? 'blue' : 'black',
+               bold: { mod: newNodeval.includes('JB') ? 'bold' : newNodeval.includes('FD') ? 'bold' : newNodeval.includes('L-L') ? 'bold' : newNodeval.includes('L-E') ? 'bold' : isLastCharUpperCase(newNodeval) ? 'bold' : "" }
             },
             x: nodePosition.x + 50,
             y: nodePosition.y + 50
@@ -910,7 +941,25 @@
       var nodeColorInput = document.getElementsByName('nodeColor')[0].value;
       var onetarget = nodesData.get(selectedNodeId[selectedNodeId.length - 1])
       onetarget.fixed = { x: !(onetarget.fixed && onetarget.fixed.x), y: !(onetarget.fixed && onetarget.fixed.y) };
-      onetarget.color = onetarget.fixed.x ? 'red' : nodeColorInput; // 색상을 변경합니다.
+      if (onetarget.fixed.x) {
+         onetarget.shadow = {
+            enabled: true,
+            color: 'red',
+            size: 10,
+            x: 0,
+            y: 0
+         }
+      }
+      else {
+         onetarget.shadow = {
+            enabled: false,
+            color: 'red',
+            size: 10,
+            x: 0,
+            y: 0
+         }
+
+      }
       selectedNodeId.forEach(function (id) {
          var updatedNode = nodesData.get(id);
          updatedNode.fixed = onetarget.fixed;
@@ -920,7 +969,7 @@
    }
 
    document.addEventListener("keydown", function (event) {
-      if (event.key === "Delete") {
+      if (event.shiftKey && event.key === "Delete") {
          var selectedNodes = network.getSelectedNodes();
          var selectedEdges = network.getSelectedEdges();
 
@@ -1143,9 +1192,10 @@
                var nodes_set2 = new Set();
                var fixnode = new Set();
 
-               data.nodes.forEach(function (node) {
+               /*data.nodes.forEach(function (node) {
                   var ol = node.label
-                  var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+
+                  var newlabel = ol.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
                   var newlabel2 = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
                   if (!nodes_set2.has(newlabel2)) {
                      nodes_set2.add(newlabel2)
@@ -1158,7 +1208,7 @@
                // 새로운 노드와 엣지 데이터를 추가합니다.
                data.nodes.forEach(function (node) {
                   var ol = node.label
-                  var newlabel = ol.replace(selectedTitle, "").replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
+                  var newlabel = ol.replace("AP0", "AP").replace("FP0", "FP").replace("AS0", "AS").replace("FS0", "FS").replace("JBJ0", "J").replace("JBJ", "J")
                   var newlabel2 = newlabel.replace("FP", "").replace("AP", "").replace("FS", "").replace("AS", "")
                   if (fixnode.has(newlabel2)) {
                      node.label = newlabel
@@ -1166,7 +1216,7 @@
                   else {
                      node.label = newlabel2
                   }
-               })
+               })*/
                nodesData.add(data.nodes);
                edgesData.add(data.edges);
                network.setOptions({ physics: { enabled: false } });
