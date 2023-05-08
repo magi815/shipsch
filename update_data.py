@@ -33,3 +33,4 @@ with engine.connect() as con:
             # Circuit 값이 일치하는 행이 존재하지 않는 경우, 새로운 행을 추가합니다.
             row.to_sql(table_name, engine, if_exists='append', index=False)
 
+UPDATE `3278` SET `From Length`=3.4, `To Length`=3.0, `길이Node`='       F-(    3.4)-E3AP2271-(    4.9)-E3AP2281-(    7.7)-E3AP2274-(  12.65)-E3AP2275-(  14.72)-E3AP2270-(  16.34)-E3AP2267-(  16.48)-E3AP2266-(  17.18)-E3AP2265-(  17.44)-E3AP2264-(   17.8)-E3AP2263-(  18.22)-E3AP2262-(  18.84)-E3AP2261-(  19.06)-E3AP2260-(  21.74)-E3AP2251-(  24.31)-E3AP2250-(  24.61)-E3AP2249-(  25.59)-E3AP2241-(  25.75)-E3AP2240-(  26.65)-E3AP2239-(  26.67)-E3AP2238-(  28.43)-E3AP2218-(  28.46)-E3AP2217-(  29.04)-E3AP2216-(  32.75)-E3AP2210-(  33.58)-E3AP2212-(  35.06)-E3AP017B-(  37.16)-T       ' WHERE Circuit='A-GE8-3';

@@ -228,31 +228,25 @@ def map_main(request):
                                 if split_node[i] not in endnodes:
                                     endnodes.append(split_node[i])
                                 if node in split_node[i] and not split_node[i][-1].isalpha():
-                                    if i == 0 and ("JB" in row['FromEquipment'] or "CABINET" in row['FromEquipment'] or "STARTER" in row['FromEquipment'] or "PANEL" in row['FromEquipment'] or "FVT" in row['FromEquipment'] ) :
-                                        c = 1
-                                        if [row['FromEquipment'], split_node[i],c] not in edges and [split_node[i], row['FromEquipment'],c] not in edges :
-                                            edges.append([row['FromEquipment'], split_node[i],c])
-                                        nodes_set.add(split_node[i])
-                                        nodes_set.add(row['FromEquipment'])
-                                    elif i == len(split_node)-1 and ("JB" in row['ToEquipment'] or "CABINET" in row['ToEquipment'] or "STARTER" in row['ToEquipment'] or "PANEL" in row['ToEquipment'] or "FVT" in row['ToEquipment'] ) :
-                                        c = 1
-                                        if [row['ToEquipment'], split_node[i],c] not in edges and [split_node[i], row['ToEquipment'],c] not in edges :
-                                            edges.append([row['ToEquipment'], split_node[i],c])
-                                        nodes_set.add(split_node[i])
-                                        nodes_set.add(row['ToEquipment'])
+                                    if i == len(split_node)-1:
+                                        if "JB" in row['ToEquipment'] or "CABINET" in row['ToEquipment'] or "STARTER" in row['ToEquipment'] or "PANEL" in row['ToEquipment'] or "FVT" in row['ToEquipment']  :
+                                            c = 1
+                                            if [row['ToEquipment'], split_node[i],c] not in edges and [split_node[i], row['ToEquipment'],c] not in edges :
+                                                edges.append([row['ToEquipment'], split_node[i],c])
+                                                nodes_set.add(split_node[i])
+                                                nodes_set.add(row['ToEquipment'])
 
-                                    elif nodelen is not None:
-                                        if i == 0 :
-                                            c = row['FromLength']
-                                        elif i == len(split_node)-1:
+                                        elif nodelen is not None:
                                             c = row['ToLength']
-                                        if [row['Circuit'], split_node[i],c] not in edges and [split_node[i], row['Circuit'],c] not in edges :
-                                            edges.append([row['Circuit'], split_node[i],c]) 
-                                    else:
-                                        if [row['Circuit'], split_node[i],1] not in edges and [split_node[i], row['Circuit'],1] not in edges :
-                                            edges.append([row['Circuit'], split_node[i],1]) 
-                                    nodes_set.add(split_node[i])
-                                    nodes_set.add(row['Circuit'])
+                                            if [row['Circuit'], split_node[i],c] not in edges and [split_node[i], row['Circuit'],c] not in edges :
+                                                edges.append([row['Circuit'], split_node[i],c]) 
+                                                nodes_set.add(split_node[i])
+                                                nodes_set.add(row['Circuit'])
+                                        else:
+                                            if [row['Circuit'], split_node[i],1] not in edges and [split_node[i], row['Circuit'],1] not in edges :
+                                                edges.append([row['Circuit'], split_node[i],1]) 
+                                                nodes_set.add(split_node[i])
+                                                nodes_set.add(row['Circuit'])
 
                             if i < len(split_node)-1:
                                 if node in split_node[i] and node in split_node[i+1]:

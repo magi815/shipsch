@@ -1,0 +1,24 @@
+nodes.push({
+id: to_node,
+label: newlabel,
+shadow: {
+enabled: to_node.includes('F-FD') ? 'false' : to_node.includes('JB') ? 'true' : to_node.includes('L-L') ? 'true' :
+to_node.includes('L-E') ? 'true' : isLastCharUpperCase(to_node) ? 'true' : "false",
+color: 'red',
+size: 10,
+x: 0,
+y: 0
+},
+size: isLastCharUpperCase(to_node) ? 12 : 5, // 조건부 설정
+color: to_node.includes('JB') ? 'green' : to_node.includes('F-FD') ? "#8B00FF" : to_node.includes('L-L') ? 'yellow' :
+to_node.includes('L-E') ? 'red' : isLastCharUpperCase(to_node) ? 'blue' : "#737373",
+font: {
+multi: 'html',
+size: to_node.includes('JB') ? 38 : to_node.includes('F-FD') ? 32 : to_node.includes('L-L') ? 38 :
+to_node.includes('L-E') ? 38 : isLastCharUpperCase(to_node) ? 38 : 29,
+color: to_node.includes('JB') ? 'green' : to_node.includes('F-FD') ? "#8B00FF" : to_node.includes('L-L') ? 'green' :
+to_node.includes('L-E') ? 'red' : isLastCharUpperCase(to_node) ? 'blue' : 'black',
+bold: { mod: to_node.includes('JB') ? 'bold' : to_node.includes('F-FD') ? 'bold' : to_node.includes('L-L') ? 'bold' :
+to_node.includes('L-E') ? 'bold' : isLastCharUpperCase(to_node) ? 'bold' : "" }
+}
+});

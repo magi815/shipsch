@@ -18,7 +18,7 @@
          border: 1px solid lightgray;
          padding: 10px;
          z-index: 100;
-         right: -375px;
+         right: -310px;
       }
 
       #menu2 {
@@ -172,7 +172,10 @@
       <div id="menu">
          <button id="fixNode">고정</button>
          <input type="text" id="addnode_id" style="width:50px" placeholder="name"><input type="text" id="addnode_label"
-            placeholder="length" style="width:50px"><button onclick="addnode()">추가</button>
+            placeholder="length" style="width:50px"><button onclick="addnode()">추가</button><br>
+         <input type="text" id="addnode_id2" style="width:120px" placeholder="name"><button
+            onclick="addnode2()">수정</button>
+
       </div>
    </div>
    <div id="mynetwork"></div>
@@ -895,6 +898,15 @@
       }
       updateSelectedInfo(null, null);
    }
+
+   function addnode2() {
+      var newNodeval = document.getElementById('addnode_id2').value;
+      sn.label = `<b>${newNodeval}</b>`
+
+      nodesData.update(sn);
+   }
+
+
    function addnode() {
       var newNodeval = document.getElementById('addnode_id').value;
       var node = nodesData.get(newNodeval)
@@ -1055,25 +1067,34 @@
          if (nodesData.get(nodeID) !== null) { // 노드가 존재하는지 확인
             var connectedEdges = network.getConnectedEdges(nodeID);
             if (connectedEdges.length === 2 && isLastCharUpperCase(nodeID) == false && !nodeID.includes('JB') && !nodeID.includes('_') && !endnodes.includes(nodeID)) {
+
                var edge1 = edgesData.get(connectedEdges[0]);
                var edge2 = edgesData.get(connectedEdges[1]);
-               var newEdgeLength = parseFloat((parseFloat(edge1.label) + parseFloat(edge2.label)).toFixed(2)); // 수정된 부분
-               if (edge1.from == edge2.from) {
-                  var newEdge = { id: edge1.to + "_" + edge2.to, from: edge1.to, to: edge2.to, label: newEdgeLength.toString() }
+               var node1, node2;
+
+               if (edge1.from == nodeID) { node1 = edge1.to }
+               else { node1 = edge1.from }
+               if (edge2.from == nodeID) { node2 = edge2.to }
+               else { node2 = edge2.from }
+               if (node1.x == node2.x || node1.y == node2.y) {
+                  var newEdgeLength = parseFloat((parseFloat(edge1.label) + parseFloat(edge2.label)).toFixed(2)); // 수정된 부분
+                  if (edge1.from == edge2.from) {
+                     var newEdge = { id: edge1.to + "_" + edge2.to, from: edge1.to, to: edge2.to, label: newEdgeLength.toString() }
+                  }
+                  else if (edge1.from == edge2.to) {
+                     var newEdge = { id: edge1.to + "_" + edge2.from, from: edge1.to, to: edge2.from, label: newEdgeLength.toString() }
+                  }
+                  else if (edge1.to == edge2.from) {
+                     var newEdge = { id: edge1.from + "_" + edge2.to, from: edge1.from, to: edge2.to, label: newEdgeLength.toString() }
+                  }
+                  else if (edge1.to == edge2.to) {
+                     var newEdge = { id: edge1.from + "_" + edge2.from, from: edge1.from, to: edge2.from, label: newEdgeLength.toString() }
+                  }
+                  edgesData.remove(connectedEdges);
+                  edgesData.add(newEdge);
+                  nodesToRemove.push(nodeID);
+                  nodesData.remove(nodeID);
                }
-               else if (edge1.from == edge2.to) {
-                  var newEdge = { id: edge1.to + "_" + edge2.from, from: edge1.to, to: edge2.from, label: newEdgeLength.toString() }
-               }
-               else if (edge1.to == edge2.from) {
-                  var newEdge = { id: edge1.from + "_" + edge2.to, from: edge1.from, to: edge2.to, label: newEdgeLength.toString() }
-               }
-               else if (edge1.to == edge2.to) {
-                  var newEdge = { id: edge1.from + "_" + edge2.from, from: edge1.from, to: edge2.from, label: newEdgeLength.toString() }
-               }
-               edgesData.remove(connectedEdges);
-               edgesData.add(newEdge);
-               nodesToRemove.push(nodeID);
-               nodesData.remove(nodeID);
             }
             else if (connectedEdges.length === 0) {
                nodesData.remove(nodeID);
@@ -1467,6 +1488,7 @@
       if (params.nodes.length === 0) return;
 
       sn = nodesData.get(params.nodes[0]);
+      document.getElementById('addnode_id2').value = sn.id;
       let tempElement = document.createElement("div");
       tempElement.innerHTML = sn.label;
       snlabel = tempElement.innerText;
