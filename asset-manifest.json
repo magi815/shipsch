@@ -1,16 +1,15 @@
 {
   "files": {
-    "main.css": "/shipsch/static/css/main.f855e6bc.css",
-    "main.js": "/shipsch/static/js/main.37fa573d.js",
+    "main.css": "/shipsch/static/css/main.b958cd4a.css",
+    "main.js": "/shipsch/static/js/main.3fe2ee69.js",
     "static/js/453.3093b9ce.chunk.js": "/shipsch/static/js/453.3093b9ce.chunk.js",
-    "static/media/logo.svg": "/shipsch/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
     "index.html": "/shipsch/index.html",
-    "main.f855e6bc.css.map": "/shipsch/static/css/main.f855e6bc.css.map",
-    "main.37fa573d.js.map": "/shipsch/static/js/main.37fa573d.js.map",
+    "main.b958cd4a.css.map": "/shipsch/static/css/main.b958cd4a.css.map",
+    "main.3fe2ee69.js.map": "/shipsch/static/js/main.3fe2ee69.js.map",
     "453.3093b9ce.chunk.js.map": "/shipsch/static/js/453.3093b9ce.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f855e6bc.css",
-    "static/js/main.37fa573d.js"
+    "static/css/main.b958cd4a.css",
+    "static/js/main.3fe2ee69.js"
   ]
 }
