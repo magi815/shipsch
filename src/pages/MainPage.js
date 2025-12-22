@@ -1,87 +1,74 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import Header from '../components/Header';
 import DataTable from '../components/DataTable';
-import { getShips, getRows, saveChecked, saveCheckedAll, changeSetBlockAll } from '../api/shipApi';
+import { useShips, useRows, useSaveMemo, useSaveChecked, useSaveCheckedAll, useChangeSetBlockAll } from '../hooks/useShipData';
+import useAppStore from '../store/useAppStore';
 
 function MainPage() {
-  const [ships, setShips] = useState([]);
-  const [currentShip, setCurrentShip] = useState(null);
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({});
-  const [hiddenBlocks, setHiddenBlocks] = useState([]);
-  const [selectedCircuits, setSelectedCircuits] = useState(new Set());
-  const [extraFeaturesVisible, setExtraFeaturesVisible] = useState(false);
-  const [tbnState, setTbnState] = useState({ showType: true, showBlock: true, showNode: true });
+  // Zustand 스토어에서 상태 가져오기
+  const {
+    currentShip,
+    setCurrentShip,
+    filters,
+    setFilters,
+    resetFilters,
+    hiddenBlocks,
+    toggleHiddenBlock,
+    selectedCircuits,
+    toggleCircuitSelection,
+    setSelectedCircuits,
+    clearSelectedCircuits,
+    extraFeaturesVisible,
+    toggleExtraFeatures,
+    tbnState,
+    toggleTbn,
+    darkMode,
+    toggleDarkMode,
+  } = useAppStore();
 
-  // T B N 토글 핸들러
-  const handleTbnToggle = (key) => {
-    setTbnState(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  // React Query 훅 사용
+  const { data: ships = [], isLoading: shipsLoading } = useShips();
+  const { data: rows = [], isLoading: rowsLoading, isFetching } = useRows(currentShip, filters);
 
-  // 선박 목록 로드
+  // Mutation 훅들
+  const saveMemoMutation = useSaveMemo();
+  const saveCheckedMutation = useSaveChecked();
+  const saveCheckedAllMutation = useSaveCheckedAll();
+  const changeSetBlockAllMutation = useChangeSetBlockAll();
+
+  const loading = shipsLoading || rowsLoading;
+
+  // 초기 선박 설정
   useEffect(() => {
-    const loadShips = async () => {
-      try {
-        const shipList = await getShips();
-        setShips(shipList);
-        if (shipList.length > 0) {
-          const savedShip = localStorage.getItem('lastShip');
-          const initialShip = savedShip && shipList.includes(savedShip) ? savedShip : shipList[0];
-          setCurrentShip(initialShip);
-        }
-      } catch (err) {
-        console.error('선박 목록 로드 실패:', err);
-      }
-    };
-    loadShips();
-  }, []);
-
-  // 데이터 로드
-  const loadData = useCallback(async () => {
-    if (!currentShip) return;
-    setLoading(true);
-    try {
-      const data = await getRows(currentShip, filters);
-      setRows(data.rows || []);
-      setHiddenBlocks([]);
-      setSelectedCircuits(new Set());
-    } catch (err) {
-      console.error('데이터 로드 실패:', err);
-    } finally {
-      setLoading(false);
+    if (ships.length > 0 && !currentShip) {
+      const savedShip = localStorage.getItem('lastShip');
+      const initialShip = savedShip && ships.includes(savedShip) ? savedShip : ships[0];
+      setCurrentShip(initialShip);
     }
-  }, [currentShip, filters]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  }, [ships, currentShip, setCurrentShip]);
 
   // 선박 변경
-  const handleShipChange = (ship) => {
+  const handleShipChange = useCallback((ship) => {
     setCurrentShip(ship);
     localStorage.setItem('lastShip', ship);
-    setFilters({});
-  };
+  }, [setCurrentShip]);
 
   // 필터 적용
-  const handleFilter = (newFilters) => {
+  const handleFilter = useCallback((newFilters) => {
     setFilters(newFilters);
-  };
+  }, [setFilters]);
 
   // 필터 초기화
-  const handleReset = () => {
-    setFilters({});
-  };
+  const handleReset = useCallback(() => {
+    resetFilters();
+  }, [resetFilters]);
 
   // SetBlock 토글
-  const handleToggleBlock = (block) => {
-    setHiddenBlocks(prev =>
-      prev.includes(block) ? prev.filter(b => b !== block) : [...prev, block]
-    );
-  };
+  const handleToggleBlock = useCallback((block) => {
+    toggleHiddenBlock(block);
+  }, [toggleHiddenBlock]);
 
-  // SetBlock 목록 추출 (Object로 변환) - API는 DB 원본 필드명 사용
+  // SetBlock 목록 추출
   const setBlocks = useMemo(() => {
     const blocks = {};
     rows.forEach(row => {
@@ -98,20 +85,17 @@ function MainPage() {
     return rows.filter(r => r.checked).length;
   }, [rows]);
 
-  // 체크 상태 변경
-  const handleCheckChange = async (circuit, checked) => {
-    try {
-      await saveChecked(currentShip, circuit, checked);
-      setRows(prev => prev.map(r =>
-        r.Circuit === circuit ? { ...r, checked: checked ? 1 : 0 } : r
-      ));
-    } catch (err) {
-      console.error('체크 저장 실패:', err);
-    }
-  };
+  // 체크 상태 변경 (낙관적 업데이트 적용)
+  const handleCheckChange = useCallback(async (circuit, checked) => {
+    saveCheckedMutation.mutate({
+      shipNum: currentShip,
+      circuit,
+      checked
+    });
+  }, [currentShip, saveCheckedMutation]);
 
-  // 전체 체크/해제 (숨겨진 서킷 제외) - API는 DB 원본 필드명 사용
-  const handleCheckAll = async (checked) => {
+  // 전체 체크/해제
+  const handleCheckAll = useCallback(async (checked) => {
     const visibleCircuits = rows
       .filter(row => {
         const setBlock = row['SET Block'] || '';
@@ -119,31 +103,21 @@ function MainPage() {
       })
       .map(r => r.Circuit);
     if (visibleCircuits.length === 0) return;
-    try {
-      await saveCheckedAll(currentShip, visibleCircuits, checked);
-      setRows(prev => prev.map(r =>
-        visibleCircuits.includes(r.Circuit) ? { ...r, checked: checked ? 1 : 0 } : r
-      ));
-    } catch (err) {
-      console.error('전체 체크 저장 실패:', err);
-    }
-  };
+
+    saveCheckedAllMutation.mutate({
+      shipNum: currentShip,
+      circuits: visibleCircuits,
+      checked
+    });
+  }, [currentShip, rows, hiddenBlocks, saveCheckedAllMutation]);
 
   // 서킷 선택 토글
-  const handleCircuitSelect = (circuit, selected) => {
-    setSelectedCircuits(prev => {
-      const newSet = new Set(prev);
-      if (selected) {
-        newSet.add(circuit);
-      } else {
-        newSet.delete(circuit);
-      }
-      return newSet;
-    });
-  };
+  const handleCircuitSelect = useCallback((circuit, selected) => {
+    toggleCircuitSelection(circuit);
+  }, [toggleCircuitSelection]);
 
   // 전체 선택/해제
-  const handleSelectAll = (selectAll) => {
+  const handleSelectAll = useCallback((selectAll) => {
     if (selectAll) {
       const visibleCircuits = rows
         .filter(row => {
@@ -151,68 +125,81 @@ function MainPage() {
           return !hiddenBlocks.includes(setBlock);
         })
         .map(r => r.Circuit);
-      setSelectedCircuits(new Set(visibleCircuits));
+      setSelectedCircuits(visibleCircuits);
     } else {
-      setSelectedCircuits(new Set());
+      clearSelectedCircuits();
     }
-  };
+  }, [rows, hiddenBlocks, setSelectedCircuits, clearSelectedCircuits]);
 
-  // 선택된 서킷들의 SetBlock 일괄 변경 - API는 DB 원본 필드명 사용
-  const handleChangeSetBlockAll = async (blockNbr) => {
+  // 선택된 서킷들의 SetBlock 일괄 변경
+  const handleChangeSetBlockAll = useCallback(async (blockNbr) => {
     if (selectedCircuits.size === 0) {
       alert('선택된 서킷이 없습니다.');
       return;
     }
-    try {
-      const circuits = [...selectedCircuits];
-      await changeSetBlockAll(currentShip, circuits, blockNbr);
-      setRows(prev => prev.map(r => {
-        if (selectedCircuits.has(r.Circuit)) {
-          return { ...r, 'SET Block': blockNbr };
-        }
-        return r;
-      }));
-      setSelectedCircuits(new Set());
-      alert('SetBlock이 변경되었습니다.');
-    } catch (err) {
-      console.error('SetBlock 변경 실패:', err);
-      alert('SetBlock 변경에 실패했습니다.');
+
+    const circuits = [...selectedCircuits].filter(circuit => {
+      const row = rows.find(r => r.Circuit === circuit);
+      if (!row) return false;
+      const setBlock = row['SET Block'] || '';
+      return !hiddenBlocks.includes(setBlock);
+    });
+
+    if (circuits.length === 0) {
+      alert('변경 가능한 서킷이 없습니다. (숨김 처리된 항목 제외)');
+      return;
     }
-  };
+
+    changeSetBlockAllMutation.mutate(
+      { shipNum: currentShip, circuits, blockNbr },
+      {
+        onSuccess: () => {
+          clearSelectedCircuits();
+          alert('SetBlock이 변경되었습니다.');
+        },
+        onError: () => {
+          alert('SetBlock 변경에 실패했습니다.');
+        }
+      }
+    );
+  }, [currentShip, selectedCircuits, rows, hiddenBlocks, changeSetBlockAllMutation, clearSelectedCircuits]);
 
   // 개별 SetBlock 변경
-  const handleSetBlockChange = async (circuit, blockNbr) => {
-    try {
-      await changeSetBlockAll(currentShip, [circuit], blockNbr);
-      setRows(prev => prev.map(r =>
-        r.Circuit === circuit ? { ...r, 'SET Block': blockNbr } : r
-      ));
-    } catch (err) {
-      console.error('SetBlock 변경 실패:', err);
-    }
-  };
+  const handleSetBlockChange = useCallback(async (circuit, blockNbr) => {
+    changeSetBlockAllMutation.mutate({
+      shipNum: currentShip,
+      circuits: [circuit],
+      blockNbr
+    });
+  }, [currentShip, changeSetBlockAllMutation]);
 
-  // 메모 저장 후 처리
-  const handleMemoSave = (circuit, newMemo) => {
-    const now = new Date();
-    const memodate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    setRows(prev => prev.map(r =>
-      r.Circuit === circuit ? { ...r, memo: newMemo, memodate } : r
-    ));
-  };
+  // 메모 저장 후 처리 (낙관적 업데이트 적용)
+  const handleMemoSave = useCallback((circuit, newMemo) => {
+    saveMemoMutation.mutate({
+      shipNum: currentShip,
+      circuit,
+      memo: newMemo,
+      imageFiles: []
+    });
+  }, [currentShip, saveMemoMutation]);
 
-  // 노드 클릭 처리 (길게 클릭 - 검색)
-  const handleNodeClick = (node) => {
-    setFilters(prev => ({ ...prev, node }));
-  };
+  // 노드 클릭 처리
+  const handleNodeClick = useCallback((node) => {
+    setFilters({ ...filters, node });
+  }, [filters, setFilters]);
 
-  // 추가 기능 토글
-  const handleToggleExtraFeatures = () => {
-    setExtraFeaturesVisible(prev => !prev);
-  };
+  // TBN 토글 핸들러
+  const handleTbnToggle = useCallback((key) => {
+    toggleTbn(key);
+  }, [toggleTbn]);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: darkMode ? '#1a1a2e' : '#f9fafb',
+      color: darkMode ? '#e0e0e0' : '#333',
+      transition: 'background-color 0.3s, color 0.3s'
+    }}>
       <Header
         ships={ships}
         currentShip={currentShip}
@@ -221,7 +208,9 @@ function MainPage() {
         onFilter={handleFilter}
         onReset={handleReset}
         extraFeaturesVisible={extraFeaturesVisible}
-        onToggleExtraFeatures={handleToggleExtraFeatures}
+        onToggleExtraFeatures={toggleExtraFeatures}
+        darkMode={darkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
       {loading ? (
@@ -230,7 +219,7 @@ function MainPage() {
           justifyContent: 'center',
           alignItems: 'center',
           height: '50vh',
-          color: '#6b7280'
+          color: darkMode ? '#9ca3af' : '#6b7280'
         }}>
           <div>로딩 중...</div>
         </div>
@@ -255,6 +244,8 @@ function MainPage() {
           onSelectAll={handleSelectAll}
           onChangeSetBlockAll={handleChangeSetBlockAll}
           onSetBlockChange={handleSetBlockChange}
+          darkMode={darkMode}
+          isFetching={isFetching}
         />
       )}
     </div>

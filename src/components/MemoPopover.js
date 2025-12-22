@@ -2,7 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { saveMemo, getMemoImages, deleteMemoImage } from '../api/shipApi';
 import API_BASE_URL from '../api/config';
 
-function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave }) {
+// 이미지 URL 정규화 함수
+const normalizeImageUrl = (url) => {
+  if (!url) return '';
+  // 이미 https로 시작하면 그대로 사용
+  if (url.startsWith('https://')) return url;
+  // http로 시작하면 https로 변환
+  if (url.startsWith('http://')) return url.replace('http://', 'https://');
+  // 상대 경로면 API_BASE_URL 추가
+  if (url.startsWith('/')) return `${API_BASE_URL}${url}`;
+  // media/ 로 시작하면 API_BASE_URL + / 추가
+  if (url.startsWith('media/')) return `${API_BASE_URL}/${url}`;
+  return url;
+};
+
+function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave, darkMode }) {
   const [memoText, setMemoText] = useState(memo || '');
   const [images, setImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
@@ -15,7 +29,12 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
     const loadImages = async () => {
       try {
         const result = await getMemoImages(shipNum, circuit);
-        setImages(result.images || []);
+        // 이미지 URL 정규화
+        const normalizedImages = (result.images || []).map(img => ({
+          ...img,
+          url: normalizeImageUrl(img.url)
+        }));
+        setImages(normalizedImages);
       } catch (err) {
         console.error('이미지 로드 실패:', err);
       }
@@ -31,8 +50,16 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
   const handleSave = async () => {
     setSaving(true);
     try {
-      await saveMemo(shipNum, circuit, memoText, newImages);
-      onSave(circuit, memoText);
+      const result = await saveMemo(shipNum, circuit, memoText, newImages);
+      // Django API 응답에서 has_any_image가 true면 @ 접두어 붙이기
+      let finalMemo = result.memo_plain || memoText;
+      if (result.has_any_image) {
+        // 이미 @로 시작하지 않으면 @ 추가
+        if (!finalMemo.startsWith('@')) {
+          finalMemo = `@ ${finalMemo}`.trim();
+        }
+      }
+      onSave(circuit, finalMemo);
       onClose();
     } catch (err) {
       console.error('메모 저장 실패:', err);
@@ -72,7 +99,7 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: darkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)',
           zIndex: 1000
         }}
         onClick={onClose}
@@ -84,9 +111,10 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          backgroundColor: 'white',
+          backgroundColor: darkMode ? '#292a2d' : 'white',
           borderRadius: '12px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          boxShadow: darkMode ? '0 20px 60px rgba(0,0,0,0.5)' : '0 20px 60px rgba(0,0,0,0.3)',
+          border: darkMode ? '1px solid #3c4043' : 'none',
           zIndex: 1001,
           width: '90%',
           maxWidth: '500px',
@@ -97,14 +125,14 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
       >
         <div style={{
           padding: '16px',
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: darkMode ? '1px solid #3c4043' : '1px solid #e5e7eb',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '16px' }}>{circuit}</div>
-            {memodate && <div style={{ fontSize: '12px', color: '#9ca3af' }}>{memodate}</div>}
+            <div style={{ fontWeight: 600, fontSize: '16px', color: darkMode ? '#e8eaed' : '#333' }}>{circuit}</div>
+            {memodate && <div style={{ fontSize: '12px', color: darkMode ? '#9aa0a6' : '#9ca3af' }}>{memodate}</div>}
           </div>
           <button
             onClick={onClose}
@@ -113,7 +141,7 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
               border: 'none',
               fontSize: '24px',
               cursor: 'pointer',
-              color: '#9ca3af'
+              color: darkMode ? '#9aa0a6' : '#9ca3af'
             }}
           >
             ×
@@ -129,22 +157,24 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
               width: '100%',
               minHeight: '120px',
               padding: '12px',
-              border: '1px solid #d1d5db',
+              border: darkMode ? '1px solid #5f6368' : '1px solid #d1d5db',
               borderRadius: '8px',
               fontSize: '14px',
               resize: 'vertical',
-              outline: 'none'
+              outline: 'none',
+              backgroundColor: darkMode ? '#35363a' : '#fff',
+              color: darkMode ? '#e8eaed' : '#333'
             }}
           />
 
           {(images.length > 0 || newImages.length > 0) && (
             <div style={{ marginTop: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>첨부 이미지</div>
+              <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '8px', color: darkMode ? '#e8eaed' : '#333' }}>첨부 이미지</div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {images.map((img) => (
                   <div key={img.id} style={{ position: 'relative' }}>
                     <img
-                      src={`${API_BASE_URL}${img.url}`}
+                      src={img.url}
                       alt=""
                       style={{
                         width: '80px',
@@ -153,7 +183,7 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
                         borderRadius: '8px',
                         cursor: 'pointer'
                       }}
-                      onClick={() => setViewingImage(`${API_BASE_URL}${img.url}`)}
+                      onClick={() => setViewingImage(img.url)}
                     />
                     <button
                       onClick={() => handleDeleteImage(img.id)}
@@ -215,7 +245,7 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
 
         <div style={{
           padding: '16px',
-          borderTop: '1px solid #e5e7eb',
+          borderTop: darkMode ? '1px solid #3c4043' : '1px solid #e5e7eb',
           display: 'flex',
           gap: '8px',
           justifyContent: 'space-between'
@@ -224,7 +254,8 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
             onClick={() => fileInputRef.current?.click()}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#f3f4f6',
+              backgroundColor: darkMode ? '#35363a' : '#f3f4f6',
+              color: darkMode ? '#e8eaed' : '#333',
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',
@@ -246,7 +277,8 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
               onClick={onClose}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#f3f4f6',
+                backgroundColor: darkMode ? '#35363a' : '#f3f4f6',
+                color: darkMode ? '#e8eaed' : '#333',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -260,8 +292,8 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
               disabled={saving}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#0ea5e9',
-                color: 'white',
+                backgroundColor: darkMode ? '#8ab4f8' : '#0ea5e9',
+                color: darkMode ? '#202124' : 'white',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: saving ? 'not-allowed' : 'pointer',
@@ -284,7 +316,7 @@ function MemoPopover({ isOpen, onClose, circuit, memo, memodate, shipNum, onSave
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.9)',
+            backgroundColor: 'rgba(0,0,0,0.95)',
             zIndex: 2000,
             display: 'flex',
             alignItems: 'center',

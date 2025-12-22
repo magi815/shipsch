@@ -31,16 +31,18 @@ function DataTable({
   onCircuitSelect,
   onSelectAll,
   onChangeSetBlockAll,
-  onSetBlockChange
+  onSetBlockChange,
+  darkMode
 }) {
   const parentRef = useRef(null);
   const [memoPopover, setMemoPopover] = useState({ isOpen: false, circuit: '', memo: '', memodate: '' });
-  const [activeSetBlockCircuit, setActiveSetBlockCircuit] = useState(null);
+  const [setBlockPopup, setSetBlockPopup] = useState({ isOpen: false, circuit: '', currentValue: '' });
   const [setBlockInput, setSetBlockInput] = useState('');
   const [pageSearchQuery, setPageSearchQuery] = useState('');
   const [highlightedCircuit, setHighlightedCircuit] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+  const [checkAllPopup, setCheckAllPopup] = useState(false);
 
   // 거리계산 상태 (circuit별로 선택된 노드들)
   const [selectedNodes, setSelectedNodes] = useState({}); // { circuit: [node1, node2] }
@@ -63,7 +65,7 @@ function DataTable({
     measureElement: (element) => element?.getBoundingClientRect().height ?? 140
   });
 
-  // 페이지 내 검색
+  // 페이지 내 검색 (서킷당 한 번만 하이라이트)
   const handlePageSearch = useCallback(() => {
     if (!pageSearchQuery.trim()) {
       setSearchResults([]);
@@ -72,24 +74,38 @@ function DataTable({
     }
     const query = pageSearchQuery.toLowerCase();
     const results = [];
+    const addedCircuits = new Set(); // 중복 서킷 방지
+
     filteredData.forEach((row, idx) => {
-      const circuit = (row.Circuit || '').toLowerCase();
-      const nodePath = (row['Node PATH'] || row.list_node || '').toLowerCase();
-      const blockPath = (row.list_BlockPATH || row['Block PATH'] || '').toLowerCase();
+      const circuitName = row.Circuit || '';
+      // 이미 추가된 서킷은 건너뛰기
+      if (addedCircuits.has(circuitName)) return;
+
+      const circuit = circuitName.toLowerCase();
       const cableType = (row['Cable Type'] || '').toLowerCase();
-      const setBlock = (row['SET Block'] || '').toLowerCase();
       const fromEquip = (row['From Equipment'] || '').toLowerCase();
       const toEquip = (row['To Equipment'] || '').toLowerCase();
-      if (circuit.includes(query) || nodePath.includes(query) || blockPath.includes(query) ||
-          cableType.includes(query) || setBlock.includes(query) || fromEquip.includes(query) || toEquip.includes(query)) {
-        results.push({ circuit: row.Circuit, index: idx });
+      const blockPath = (row.list_BlockPATH || row['Block PATH'] || '').toLowerCase();
+      const nodePath = (row['Node PATH'] || row.list_node || '').toLowerCase();
+      const setBlock = (row['SET Block'] || '').toLowerCase();
+      const memo = (row.memo || '').toLowerCase();
+
+      // 검색 대상: Circuit, Type, 장비이름, BlockPath, NodePath, SetBlock, 메모
+      if (circuit.includes(query) || cableType.includes(query) ||
+          fromEquip.includes(query) || toEquip.includes(query) ||
+          blockPath.includes(query) || nodePath.includes(query) ||
+          setBlock.includes(query) || memo.includes(query)) {
+        results.push({ circuit: circuitName, index: idx });
+        addedCircuits.add(circuitName);
       }
     });
     setSearchResults(results);
     setCurrentSearchIndex(0);
     if (results.length > 0) {
       setHighlightedCircuit(results[0].circuit);
-      rowVirtualizer.scrollToIndex(results[0].index, { align: 'center' });
+      rowVirtualizer.scrollToIndex(results[0].index, { align: 'start' });
+    } else {
+      setHighlightedCircuit(null);
     }
   }, [pageSearchQuery, filteredData, rowVirtualizer]);
 
@@ -98,7 +114,7 @@ function DataTable({
     const nextIndex = (currentSearchIndex + 1) % searchResults.length;
     setCurrentSearchIndex(nextIndex);
     setHighlightedCircuit(searchResults[nextIndex].circuit);
-    rowVirtualizer.scrollToIndex(searchResults[nextIndex].index, { align: 'center' });
+    rowVirtualizer.scrollToIndex(searchResults[nextIndex].index, { align: 'start' });
   }, [searchResults, currentSearchIndex, rowVirtualizer]);
 
   const handlePrevSearch = useCallback(() => {
@@ -106,7 +122,7 @@ function DataTable({
     const prevIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
     setCurrentSearchIndex(prevIndex);
     setHighlightedCircuit(searchResults[prevIndex].circuit);
-    rowVirtualizer.scrollToIndex(searchResults[prevIndex].index, { align: 'center' });
+    rowVirtualizer.scrollToIndex(searchResults[prevIndex].index, { align: 'start' });
   }, [searchResults, currentSearchIndex, rowVirtualizer]);
 
   const clearSearch = () => {
@@ -223,6 +239,11 @@ function DataTable({
     setMemoPopover({ isOpen: true, circuit, memo, memodate });
   }, []);
 
+  // SetBlock 팝업 열기 핸들러
+  const handleSetBlockPopupOpen = useCallback((circuit, currentValue) => {
+    setSetBlockPopup({ isOpen: true, circuit, currentValue });
+  }, []);
+
   // 개별 서킷 계산 결과 초기화
   const handleResetCalc = useCallback((circuit) => {
     setSelectedNodes(prev => {
@@ -257,9 +278,10 @@ function DataTable({
           alignItems: 'center',
           gap: '8px',
           padding: '5px 14px',
-          backgroundColor: '#fafafa',
-          borderBottom: '1px solid #e5e7eb',
-          overflowX: 'auto'
+          backgroundColor: darkMode ? '#292a2d' : '#fafafa',
+          borderBottom: darkMode ? '1px solid #3c4043' : '1px solid #e5e7eb',
+          overflowX: 'auto',
+          transition: 'background-color 0.3s, border-color 0.3s'
         }}
       >
         <span
@@ -272,11 +294,11 @@ function DataTable({
           }}
           style={{
             fontSize: '12px',
-            color: '#333',
+            color: darkMode ? '#202124' : '#333',
             fontWeight: 'normal',
             whiteSpace: 'nowrap',
             padding: '6px 12px',
-            backgroundColor: '#bde2f7',
+            backgroundColor: darkMode ? '#8ab4f8' : '#bde2f7',
             borderRadius: '10px',
             border: 'none',
             cursor: 'pointer',
@@ -286,7 +308,7 @@ function DataTable({
         >
           {visibleBlocks}/{totalBlocks}
         </span>
-        <div style={{ width: '1px', height: '20px', backgroundColor: '#d1d5db' }} />
+        <div style={{ width: '1px', height: '20px', backgroundColor: darkMode ? '#5f6368' : '#d1d5db' }} />
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
           {Object.entries(setBlocks).sort((a, b) => String(a[0]).localeCompare(String(b[0]))).map(([key, count]) => {
             const isHidden = hiddenBlocks.includes(key);
@@ -300,13 +322,19 @@ function DataTable({
                   gap: '4px',
                   padding: '4px 8px',
                   borderRadius: '6px',
-                  border: isHidden ? '1px dashed #a0a0a0' : '1px solid #7cb9e8',
+                  border: isHidden
+                    ? (darkMode ? '1px dashed #5f6368' : '1px dashed #a0a0a0')
+                    : (darkMode ? '1px solid #8ab4f8' : '1px solid #7cb9e8'),
                   fontSize: '13px',
                   fontWeight: 500,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  backgroundColor: isHidden ? '#f5f5f5' : '#e8f4fc',
-                  color: isHidden ? '#888' : '#1a5276',
+                  backgroundColor: isHidden
+                    ? (darkMode ? '#35363a' : '#f5f5f5')
+                    : (darkMode ? '#292a2d' : '#e8f4fc'),
+                  color: isHidden
+                    ? (darkMode ? '#80868b' : '#888')
+                    : (darkMode ? '#8ab4f8' : '#1a5276'),
                   fontStyle: 'normal',
                   opacity: 1,
                   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -316,8 +344,10 @@ function DataTable({
               >
                 <span>{key || 'N/A'}</span>
                 <span style={{
-                  backgroundColor: isHidden ? '#d0d0d0' : '#5dade2',
-                  color: isHidden ? '#666' : '#fff',
+                  backgroundColor: isHidden
+                    ? (darkMode ? '#5f6368' : '#d0d0d0')
+                    : (darkMode ? '#8ab4f8' : '#5dade2'),
+                  color: isHidden ? (darkMode ? '#9aa0a6' : '#666') : (darkMode ? '#202124' : '#fff'),
                   fontSize: '11px',
                   fontWeight: 600,
                   padding: '1px 5px',
@@ -343,33 +373,46 @@ function DataTable({
     const isAllSelected = totalVisible > 0 && visibleSelectedCount === totalVisible;
 
     const tbnButtonStyle = (active) => ({
-      padding: '6px 12px',
-      fontSize: '14px',
-      fontWeight: 'bold',
-      border: 'none',
-      borderRadius: '10px',
+      padding: '4px 10px',
+      fontSize: '13px',
+      fontWeight: 600,
+      border: active
+        ? (darkMode ? '1px solid #8ab4f8' : '1px solid #7cb9e8')
+        : (darkMode ? '1px dashed #5f6368' : '1px dashed #bbb'),
+      borderRadius: '4px',
       cursor: 'pointer',
-      backgroundColor: active ? '#bde2f7' : '#eaf7bd',
-      color: '#333',
-      fontStyle: active ? 'normal' : 'italic',
-      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      backgroundColor: active
+        ? (darkMode ? '#292a2d' : '#e8f4fc')
+        : (darkMode ? '#35363a' : '#f8f8f8'),
+      color: active
+        ? (darkMode ? '#8ab4f8' : '#1a5276')
+        : (darkMode ? '#80868b' : '#888'),
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      transition: 'all 0.15s ease'
     });
 
     return (
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '10px',
-        padding: '8px 14px',
-        backgroundColor: '#fafafa',
-        borderBottom: '1px solid #e5e7eb',
+        gap: '8px',
+        padding: '6px 12px',
+        backgroundColor: darkMode ? '#202124' : '#f0f4f8',
+        borderBottom: darkMode ? '1px solid #3c4043' : '1px solid #d0d7de',
         position: 'sticky',
         top: 0,
-        zIndex: 20
+        zIndex: 20,
+        transition: 'background-color 0.3s, border-color 0.3s'
       }}>
         {/* T B N 버튼 */}
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{
+          display: 'flex',
+          gap: '3px',
+          padding: '3px',
+          backgroundColor: darkMode ? '#292a2d' : '#fff',
+          borderRadius: '6px',
+          border: darkMode ? '1px solid #3c4043' : '1px solid #d0d7de'
+        }}>
           <button
             onClick={() => onTbnToggle && onTbnToggle('showType')}
             style={tbnButtonStyle(tbnState?.showType)}
@@ -387,10 +430,17 @@ function DataTable({
           >N</button>
         </div>
 
-        <div style={{ width: '1px', height: '20px', backgroundColor: '#d1d5db' }} />
+        <div style={{ width: '1px', height: '24px', backgroundColor: darkMode ? '#5f6368' : '#c0c8d0' }} />
 
         {/* 페이지 내 검색 */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: '140px' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          backgroundColor: darkMode ? '#292a2d' : '#fff',
+          borderRadius: '6px',
+          border: darkMode ? '1px solid #3c4043' : '1px solid #d0d7de',
+          padding: '2px'
+        }}>
           <input
             type="text"
             placeholder="페이지 내 검색"
@@ -398,161 +448,157 @@ function DataTable({
             onChange={(e) => setPageSearchQuery(e.target.value)}
             onKeyPress={(e) => { if (e.key === 'Enter') handlePageSearch(); }}
             style={{
-              padding: '9px 28px 9px 20px',
-              fontSize: '14px',
+              padding: '5px 10px',
+              fontSize: '13px',
               border: 'none',
-              borderRadius: '30px',
-              width: '170px',
-              backgroundColor: '#fff',
+              borderRadius: '4px',
+              width: '130px',
+              backgroundColor: 'transparent',
               outline: 'none',
-              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
+              color: darkMode ? '#e8eaed' : '#333',
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}
           />
           {pageSearchQuery && (
             <button onClick={clearSearch} style={{
-              position: 'absolute',
-              right: '8px',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               fontSize: '14px',
-              color: '#94a3b8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '18px',
-              height: '18px',
-              borderRadius: '50%',
-              transition: 'color 0.2s'
+              color: darkMode ? '#9aa0a6' : '#999',
+              padding: '2px 6px'
             }}>×</button>
           )}
+          <button onClick={handlePageSearch} style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: darkMode ? '#8ab4f8' : '#bde2f7',
+            padding: '5px 8px',
+            borderRadius: '4px',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '12px'
+          }}>🔍</button>
         </div>
-        <button onClick={handlePageSearch} style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#fff',
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '14px'
-        }}>🔍</button>
+
         {searchResults.length > 0 && (
           <div style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            padding: '4px 8px',
-            backgroundColor: '#bde2f7',
-            borderRadius: '10px',
-            border: 'none'
+            gap: '2px',
+            padding: '3px 6px',
+            backgroundColor: darkMode ? '#292a2d' : '#fff',
+            borderRadius: '6px',
+            border: darkMode ? '1px solid #8ab4f8' : '1px solid #7cb9e8'
           }}>
             <button
               onClick={handlePrevSearch}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '24px',
-                height: '24px',
-                fontSize: '12px',
+                padding: '3px 8px',
+                fontSize: '11px',
                 border: 'none',
-                borderRadius: '50%',
-                backgroundColor: '#fff',
-                color: '#333',
+                borderRadius: '3px',
+                backgroundColor: darkMode ? '#8ab4f8' : '#e8f4fc',
+                color: darkMode ? '#202124' : '#1a5276',
                 cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)'
+                fontWeight: 'bold'
               }}
             >◀</button>
             <span style={{
-              fontSize: '14px',
-              color: '#333',
-              fontWeight: 'bold',
-              padding: '0 4px',
-              minWidth: '40px',
+              fontSize: '12px',
+              color: darkMode ? '#8ab4f8' : '#1a5276',
+              fontWeight: 600,
+              padding: '0 6px',
+              minWidth: '36px',
               textAlign: 'center',
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}>{currentSearchIndex + 1}/{searchResults.length}</span>
             <button
               onClick={handleNextSearch}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '24px',
-                height: '24px',
-                fontSize: '12px',
+                padding: '3px 8px',
+                fontSize: '11px',
                 border: 'none',
-                borderRadius: '50%',
-                backgroundColor: '#fff',
-                color: '#333',
+                borderRadius: '3px',
+                backgroundColor: darkMode ? '#8ab4f8' : '#e8f4fc',
+                color: darkMode ? '#202124' : '#1a5276',
                 cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)'
+                fontWeight: 'bold'
               }}
             >▶</button>
           </div>
         )}
 
-        <div style={{ width: '1px', height: '20px', backgroundColor: '#d1d5db' }} />
+        <div style={{ width: '1px', height: '24px', backgroundColor: darkMode ? '#5f6368' : '#c0c8d0' }} />
 
         {/* 셋블록 일괄변경 */}
-        <span
-          onClick={() => onSelectAll && onSelectAll(!isAllSelected)}
-          style={{
-            fontSize: '14px',
-            color: '#333',
-            fontWeight: 'bold',
-            padding: '6px 12px',
-            backgroundColor: visibleSelectedCount > 0 ? '#bde2f7' : '#eaf7bd',
-            borderRadius: '10px',
-            border: 'none',
-            cursor: 'pointer',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-          }}
-          title={isAllSelected ? '전체 선택 해제' : '전체 선택'}
-        >
-          {visibleSelectedCount}/{totalVisible}
-        </span>
-        <input
-          type="text"
-          placeholder="SetBlock"
-          value={setBlockInput}
-          onChange={(e) => setSetBlockInput(e.target.value)}
-          style={{
-            padding: '9px 20px',
-            fontSize: '14px',
-            border: 'none',
-            borderRadius: '30px',
-            width: '90px',
-            backgroundColor: '#fff',
-            outline: 'none',
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-          }}
-        />
-        <button
-          onClick={() => onChangeSetBlockAll && onChangeSetBlockAll(setBlockInput)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#d2fdd8',
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold'
-          }}
-        >✓</button>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '3px',
+          backgroundColor: darkMode ? '#292a2d' : '#fff',
+          borderRadius: '6px',
+          border: darkMode ? '1px solid #3c4043' : '1px solid #d0d7de'
+        }}>
+          <span
+            onClick={() => onSelectAll && onSelectAll(!isAllSelected)}
+            style={{
+              fontSize: '12px',
+              color: visibleSelectedCount > 0
+                ? (darkMode ? '#8ab4f8' : '#1a5276')
+                : (darkMode ? '#80868b' : '#666'),
+              fontWeight: 600,
+              padding: '4px 8px',
+              backgroundColor: visibleSelectedCount > 0
+                ? (darkMode ? '#292a2d' : '#e8f4fc')
+                : (darkMode ? '#35363a' : '#f5f5f5'),
+              borderRadius: '4px',
+              border: visibleSelectedCount > 0
+                ? (darkMode ? '1px solid #8ab4f8' : '1px solid #7cb9e8')
+                : (darkMode ? '1px dashed #5f6368' : '1px dashed #bbb'),
+              cursor: 'pointer',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}
+            title={isAllSelected ? '전체 선택 해제' : '전체 선택'}
+          >
+            {visibleSelectedCount}/{totalVisible}
+          </span>
+          <input
+            type="text"
+            placeholder="SetBlock"
+            value={setBlockInput}
+            onChange={(e) => setSetBlockInput(e.target.value)}
+            style={{
+              padding: '5px 8px',
+              fontSize: '13px',
+              border: 'none',
+              borderRadius: '4px',
+              width: '70px',
+              backgroundColor: 'transparent',
+              color: darkMode ? '#e8eaed' : '#333',
+              outline: 'none',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}
+          />
+          <button
+            onClick={() => onChangeSetBlockAll && onChangeSetBlockAll(setBlockInput)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: darkMode ? '#81c995' : '#c2ffd1',
+              padding: '5px 10px',
+              borderRadius: '4px',
+              border: darkMode ? '1px solid #81c995' : '1px solid #6fbf7b',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              color: darkMode ? '#202124' : '#2d6a3a'
+            }}
+          >적용</button>
+        </div>
       </div>
     );
   };
@@ -564,15 +610,19 @@ function DataTable({
       padding: '5px',
       fontSize: '14px',
       fontWeight: 'bold',
-      color: '#333',
-      border: '1px solid #ddd',
-      backgroundColor: '#bde2f7',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      color: darkMode ? '#e8eaed' : '#333',
+      border: darkMode ? '1px solid #3c4043' : '1px solid #ddd',
+      backgroundColor: darkMode ? '#35363a' : '#bde2f7',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      transition: 'background-color 0.3s, border-color 0.3s, color 0.3s'
     };
     return (
       <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
         <thead>
-          <tr style={{ backgroundColor: '#bde2f7', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)' }}>
+          <tr style={{
+            backgroundColor: darkMode ? '#35363a' : '#bde2f7',
+            boxShadow: darkMode ? '0px 2px 4px rgba(0, 0, 0, 0.4)' : '0px 2px 4px rgba(0, 0, 0, 0.25)'
+          }}>
             <th style={{
               ...headerStyle,
               width: '110px',
@@ -582,6 +632,27 @@ function DataTable({
               borderRightWidth: 'medium'
             }}>
               <span style={{ fontWeight: 'bold' }}>{checkedCount}</span> / <span>{filteredData.length}</span>
+              <button
+                onClick={() => setCheckAllPopup(true)}
+                style={{
+                  marginLeft: '6px',
+                  width: '16px',
+                  height: '16px',
+                  border: darkMode ? '2px solid #9aa0a6' : '2px solid #555',
+                  borderRadius: '3px',
+                  backgroundColor: checkedCount > 0 ? '#4CAF50' : (darkMode ? '#35363a' : 'white'),
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '11px',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  padding: 0,
+                  verticalAlign: 'middle'
+                }}
+                title="전체 체크/해제 (숨김 제외)"
+              >{checkedCount > 0 ? '✓' : ''}</button>
             </th>
             <th style={{ ...headerStyle, width: '100px', textAlign: 'left', whiteSpace: 'nowrap' }}>Type / Set</th>
             <th style={{ ...headerStyle, width: '40px', textAlign: 'center' }}>길이</th>
@@ -597,8 +668,12 @@ function DataTable({
 
   return (
     <div
-      onClick={() => { if (activeSetBlockCircuit) setActiveSetBlockCircuit(null); }}
-      style={{ width: '100%', minWidth: '790px' }}
+      style={{
+        width: '100%',
+        minWidth: '790px',
+        backgroundColor: darkMode ? '#202124' : '#fff',
+        transition: 'background-color 0.3s'
+      }}
     >
       {renderSetBlockBar()}
       {renderExtraFeaturesBar()}
@@ -609,7 +684,8 @@ function DataTable({
         style={{
           height: 'calc(100vh - 140px)',
           overflow: 'auto',
-          width: '100%'
+          width: '100%',
+          backgroundColor: darkMode ? '#202124' : '#fff'
         }}
       >
         <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
@@ -627,18 +703,17 @@ function DataTable({
                 isSelected={selectedCircuits?.has(circuit)}
                 circuitSelectedNodes={selectedNodes[circuit] || []}
                 circuitCalcResult={calcResults[circuit]}
-                activeSetBlockCircuit={activeSetBlockCircuit}
                 onCheckChange={onCheckChange}
                 onCircuitSelect={onCircuitSelect}
-                onSetBlockChange={onSetBlockChange}
                 onNodeClick={onNodeClick}
                 onNodeCalcClick={handleNodeCalcClick}
                 onCalcAll={handleCalcAll}
                 onMemoPopoverOpen={handleMemoPopoverOpen}
-                onSetActiveSetBlockCircuit={setActiveSetBlockCircuit}
+                onSetBlockPopupOpen={handleSetBlockPopupOpen}
                 onResetCalc={handleResetCalc}
                 onResetAllCalc={handleResetAllCalc}
                 measureElement={rowVirtualizer.measureElement}
+                darkMode={darkMode}
               />
             );
           })}
@@ -653,7 +728,206 @@ function DataTable({
         memodate={memoPopover.memodate}
         shipNum={shipNum}
         onSave={onMemoSave}
+        darkMode={darkMode}
       />
+
+      {/* SetBlock 수정 팝업 */}
+      {setBlockPopup.isOpen && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: darkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.4)',
+              zIndex: 1000
+            }}
+            onClick={() => setSetBlockPopup({ isOpen: false, circuit: '', currentValue: '' })}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: darkMode ? '#292a2d' : 'white',
+              borderRadius: '12px',
+              boxShadow: darkMode ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 40px rgba(0,0,0,0.3)',
+              border: darkMode ? '1px solid #3c4043' : 'none',
+              zIndex: 1001,
+              padding: '20px',
+              minWidth: '300px',
+              textAlign: 'center'
+            }}
+          >
+            <div style={{ fontSize: '14px', color: darkMode ? '#9aa0a6' : '#666', marginBottom: '8px' }}>
+              SET Block 수정
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: darkMode ? '#e8eaed' : '#333' }}>
+              {setBlockPopup.circuit}
+            </div>
+            <input
+              type="text"
+              defaultValue={setBlockPopup.currentValue}
+              placeholder="새 SetBlock 값"
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                border: darkMode ? '1px solid #5f6368' : '2px solid #0ea5e9',
+                borderRadius: '8px',
+                backgroundColor: darkMode ? '#35363a' : '#fff',
+                color: darkMode ? '#e8eaed' : '#333',
+                outline: 'none',
+                textAlign: 'center',
+                marginBottom: '16px'
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  onSetBlockChange && onSetBlockChange(setBlockPopup.circuit, e.target.value);
+                  setSetBlockPopup({ isOpen: false, circuit: '', currentValue: '' });
+                }
+              }}
+              id="setblock-popup-input"
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setSetBlockPopup({ isOpen: false, circuit: '', currentValue: '' })}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  border: darkMode ? '1px solid #5f6368' : '1px solid #ddd',
+                  borderRadius: '8px',
+                  backgroundColor: darkMode ? '#35363a' : '#f5f5f5',
+                  color: darkMode ? '#9aa0a6' : '#666',
+                  cursor: 'pointer'
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  const input = document.getElementById('setblock-popup-input');
+                  if (input) {
+                    onSetBlockChange && onSetBlockChange(setBlockPopup.circuit, input.value);
+                    setSetBlockPopup({ isOpen: false, circuit: '', currentValue: '' });
+                  }
+                }}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: darkMode ? '#81c995' : '#4CAF50',
+                  color: darkMode ? '#202124' : 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                수정
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 전체 체크/해제 팝업 */}
+      {checkAllPopup && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: darkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.4)',
+              zIndex: 1000
+            }}
+            onClick={() => setCheckAllPopup(false)}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: darkMode ? '#292a2d' : 'white',
+              borderRadius: '12px',
+              boxShadow: darkMode ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 40px rgba(0,0,0,0.3)',
+              border: darkMode ? '1px solid #3c4043' : 'none',
+              zIndex: 1001,
+              padding: '20px',
+              minWidth: '280px',
+              textAlign: 'center'
+            }}
+          >
+            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px', color: darkMode ? '#e8eaed' : '#333' }}>
+              전체 체크/해제
+            </div>
+            <div style={{ fontSize: '13px', color: darkMode ? '#9aa0a6' : '#666', marginBottom: '20px' }}>
+              숨김 처리된 항목은 제외됩니다
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  onCheckAll && onCheckAll(true);
+                  setCheckAllPopup(false);
+                }}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: darkMode ? '#81c995' : '#4CAF50',
+                  color: darkMode ? '#202124' : 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                전체 체크
+              </button>
+              <button
+                onClick={() => {
+                  onCheckAll && onCheckAll(false);
+                  setCheckAllPopup(false);
+                }}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: darkMode ? '#f28b82' : '#f44336',
+                  color: darkMode ? '#202124' : 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                전체 해제
+              </button>
+            </div>
+            <button
+              onClick={() => setCheckAllPopup(false)}
+              style={{
+                marginTop: '15px',
+                padding: '8px 20px',
+                fontSize: '13px',
+                border: darkMode ? '1px solid #5f6368' : '1px solid #ddd',
+                borderRadius: '6px',
+                backgroundColor: darkMode ? '#35363a' : '#f5f5f5',
+                color: darkMode ? '#9aa0a6' : '#666',
+                cursor: 'pointer'
+              }}
+            >
+              취소
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

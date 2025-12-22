@@ -9,18 +9,17 @@ const CircuitRow = memo(function CircuitRow({
   isSelected,
   circuitSelectedNodes,
   circuitCalcResult,
-  activeSetBlockCircuit,
   onCheckChange,
   onCircuitSelect,
-  onSetBlockChange,
   onNodeClick,
   onNodeCalcClick,
   onCalcAll,
   onMemoPopoverOpen,
-  onSetActiveSetBlockCircuit,
+  onSetBlockPopupOpen,
   onResetCalc,
   onResetAllCalc,
-  measureElement
+  measureElement,
+  darkMode
 }) {
   const longPressTimerRef = useRef(null);
   const isLongPressRef = useRef(false);
@@ -32,10 +31,20 @@ const CircuitRow = memo(function CircuitRow({
   const cableType = row['Cable Type'] || '';
   const setBlock = row['SET Block'] || '';
   const totalLength = row['길이'] || '';
-  const fromLength = row.reverse === 1 ? (row['To Length'] || '') : (row['From Length'] || '');
-  const toLength = row.reverse === 1 ? (row['From Length'] || '') : (row['To Length'] || '');
-  const fromEquip = row.reverse === 1 ? (row['To Equipment'] || '') : (row['From Equipment'] || '');
-  const toEquip = row.reverse === 1 ? (row['From Equipment'] || '') : (row['To Equipment'] || '');
+
+  // 기본 fromLength/toLength (row.reverse 기반)
+  const baseFromLength = row.reverse === 1 ? (row['To Length'] || '') : (row['From Length'] || '');
+  const baseToLength = row.reverse === 1 ? (row['From Length'] || '') : (row['To Length'] || '');
+  const baseFromEquip = row.reverse === 1 ? (row['To Equipment'] || '') : (row['From Equipment'] || '');
+  const baseToEquip = row.reverse === 1 ? (row['From Equipment'] || '') : (row['To Equipment'] || '');
+
+  // 거리계산 역방향 클릭 시 fromLength/toLength, fromEquip/toEquip 바꾸기
+  const isCalcReversed = circuitCalcResult?.reversed === true;
+  const fromLength = isCalcReversed ? baseToLength : baseFromLength;
+  const toLength = isCalcReversed ? baseFromLength : baseToLength;
+  const fromEquip = isCalcReversed ? baseToEquip : baseFromEquip;
+  const toEquip = isCalcReversed ? baseFromEquip : baseToEquip;
+
   const blockPath = row.list_BlockPATH || row['Block PATH'] || '';
   const nodePath = row.list_node || row['Node PATH'] || '';
   const memoText = row.memo || '';
@@ -65,15 +74,20 @@ const CircuitRow = memo(function CircuitRow({
     return 'none';
   }, [showType, showBlock, showNode, hasMemo]);
 
-  // Django 스타일 컬러 팔레트
+  // Django 스타일 컬러 팔레트 (다크모드 대응 - Chrome/Windows style)
   const circuitBgColor = 'transparent';
-  const rowBgColor = isHighlighted ? '#fffde7' : isSelected ? '#e3f2fd' : '#ffffff';
+  const rowBgColor = isHighlighted
+    ? (darkMode ? '#3d3d00' : '#fffde7')
+    : isSelected
+      ? (darkMode ? '#35363a' : '#e3f2fd')
+      : (darkMode ? '#202124' : '#ffffff');
   const cellStyle = {
     padding: '5px 8px',
-    border: '1px solid #ddd',
+    border: darkMode ? '1px solid #3c4043' : '1px solid #ddd',
     fontSize: '14px',
-    color: '#333',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    color: darkMode ? '#e8eaed' : '#333',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    transition: 'background-color 0.3s, border-color 0.3s, color 0.3s'
   };
 
   // Circuit 버튼 렌더링 - Django 스타일 (#c2ffd1 민트)
@@ -96,13 +110,13 @@ const CircuitRow = memo(function CircuitRow({
           display: 'inline-block',
           padding: '8px 8px',
           borderRadius: '8px',
-          boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2)',
+          boxShadow: darkMode ? '0 15px 35px rgba(0, 0, 0, 0.4)' : '0 15px 35px rgba(0, 0, 0, 0.2)',
           fontSize: '14px',
           fontWeight: 'bold',
           cursor: 'pointer',
           textAlign: 'center',
-          backgroundColor: isChecked ? 'yellow' : '#f0f0f0',
-          color: '#333',
+          backgroundColor: isChecked ? (darkMode ? '#fdd663' : 'yellow') : (darkMode ? '#35363a' : '#f0f0f0'),
+          color: darkMode ? (isChecked ? '#202124' : '#e8eaed') : '#333',
           width: '100%',
           wordBreak: 'break-all',
           transition: '0.25s',
@@ -145,12 +159,12 @@ const CircuitRow = memo(function CircuitRow({
                     padding: '2px'
                   }}
                 >
-                  <span style={{ color: hasMemo ? '#ef4444' : '#9ca3af' }}>✏️</span>
+                  <span style={{ color: hasMemo ? '#f28b82' : '#9aa0a6' }}>✏️</span>
                 </button>
-                <span style={{ fontWeight: 600, color: '#111827' }}>{cableType}</span>
-                {가닥수 > 1 && <b style={{ color: '#ef4444', fontWeight: 700 }}> x{가닥수}</b>}
+                <span style={{ fontWeight: 600, color: darkMode ? '#e8eaed' : '#111827' }}>{cableType}</span>
+                {가닥수 > 1 && <b style={{ color: '#f28b82', fontWeight: 700 }}> x{가닥수}</b>}
               </td>
-              <td style={{ ...cellStyle, width: '40px', textAlign: 'center', fontWeight: 700, color: '#111827', fontSize: '11px' }}>
+              <td style={{ ...cellStyle, width: '40px', textAlign: 'center', fontWeight: 700, color: darkMode ? '#e8eaed' : '#111827', fontSize: '11px' }}>
                 {totalLength}
               </td>
               <td style={{ ...cellStyle, width: '30px', textAlign: 'center' }}>{fromLength}</td>
@@ -167,10 +181,10 @@ const CircuitRow = memo(function CircuitRow({
               {firstVisibleRow === 'memo' && renderCircuitCell()}
               <td colSpan={6} style={{
                 ...cellStyle,
-                color: '#c62828',
+                color: darkMode ? '#f28b82' : '#c62828',
                 fontWeight: 500,
-                backgroundColor: '#ffebee',
-                borderLeft: '3px solid #ef5350'
+                backgroundColor: darkMode ? '#5c2626' : '#ffebee',
+                borderLeft: darkMode ? '3px solid #f28b82' : '3px solid #ef5350'
               }}>
                 {memoText.startsWith('@') ? `@ ${memoText.slice(1)}` : memoText}
               </td>
@@ -193,14 +207,14 @@ const CircuitRow = memo(function CircuitRow({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSetActiveSetBlockCircuit(activeSetBlockCircuit === circuit ? null : circuit);
+                    onSetBlockPopupOpen && onSetBlockPopupOpen(circuit, setBlock);
                   }}
                   style={{
                     cursor: 'pointer',
                     marginRight: '6px',
                     padding: '4px 7px',
-                    backgroundColor: 'rgba(255, 0, 205, 0.17)',
-                    color: '#333',
+                    backgroundColor: darkMode ? 'rgba(232, 134, 234, 0.25)' : 'rgba(255, 0, 205, 0.17)',
+                    color: darkMode ? '#e8eaed' : '#333',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '14px',
@@ -211,33 +225,6 @@ const CircuitRow = memo(function CircuitRow({
                 >
                   {setBlock || '-'}
                 </button>
-                {activeSetBlockCircuit === circuit && (
-                  <span style={{ marginRight: '8px' }}>
-                    <input
-                      type="text"
-                      defaultValue={setBlock}
-                      placeholder="새 값"
-                      style={{ width: '60px', padding: '2px 4px', fontSize: '11px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          onSetBlockChange && onSetBlockChange(circuit, e.target.value);
-                          onSetActiveSetBlockCircuit(null);
-                        }
-                      }}
-                      id={`setblock-input-${circuit}`}
-                    />
-                    <button
-                      onClick={() => {
-                        const input = document.getElementById(`setblock-input-${circuit}`);
-                        if (input) {
-                          onSetBlockChange && onSetBlockChange(circuit, input.value);
-                          onSetActiveSetBlockCircuit(null);
-                        }
-                      }}
-                      style={{ marginLeft: '4px', padding: '2px 6px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', fontSize: '14px', cursor: 'pointer', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
-                    >✓ 수정</button>
-                  </span>
-                )}
                 <span>{blockPath}</span>
               </td>
             </tr>
@@ -245,12 +232,12 @@ const CircuitRow = memo(function CircuitRow({
 
           {/* TR4: NodePATH */}
           {showNode && (
-            <tr style={{ borderBottom: '1px solid #ddd' }}>
+            <tr style={{ borderBottom: darkMode ? '1px solid #3c4043' : '1px solid #ddd' }}>
               {firstVisibleRow === 'node' && renderCircuitCell()}
               <td colSpan={6} style={{
                 ...cellStyle,
                 fontWeight: 500,
-                backgroundColor: isChecked ? '#fffde7' : 'transparent'
+                backgroundColor: isChecked ? (darkMode ? '#3d3d00' : '#fffde7') : 'transparent'
               }}>
                 {circuitCalcResult ? (
                   <div style={{
@@ -258,9 +245,9 @@ const CircuitRow = memo(function CircuitRow({
                     alignItems: 'center',
                     gap: '4px',
                     padding: '2px 8px',
-                    backgroundColor: '#f0fdf4',
+                    backgroundColor: darkMode ? '#1e3a2e' : '#f0fdf4',
                     borderRadius: '6px',
-                    border: '1px solid #bbf7d0'
+                    border: darkMode ? '1px solid #81c995' : '1px solid #bbf7d0'
                   }}>
                     <button
                       onMouseDown={() => {
@@ -283,9 +270,9 @@ const CircuitRow = memo(function CircuitRow({
                         justifyContent: 'center',
                         padding: '2px 6px',
                         fontSize: '13px',
-                        backgroundColor: '#f9fafb',
-                        color: '#6b7280',
-                        border: '1px solid #e5e7eb',
+                        backgroundColor: darkMode ? '#35363a' : '#f9fafb',
+                        color: darkMode ? '#9aa0a6' : '#6b7280',
+                        border: darkMode ? '1px solid #5f6368' : '1px solid #e5e7eb',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontWeight: 500,
@@ -293,11 +280,11 @@ const CircuitRow = memo(function CircuitRow({
                       }}
                       title="클릭: 초기화 / 길게 클릭: 전체 초기화"
                     >↩</button>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#333' }}>{circuitCalcResult.fr}</span>
-                    <span style={{ padding: '2px 4px', backgroundColor: 'blue', color: 'white', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold' }}>{circuitCalcResult.node1}</span>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#333' }}>{circuitCalcResult.ct}</span>
-                    <span style={{ padding: '2px 4px', backgroundColor: 'red', color: 'white', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold' }}>{circuitCalcResult.node2}</span>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#333' }}>{circuitCalcResult.to}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: darkMode ? '#e8eaed' : '#333' }}>{circuitCalcResult.fr}</span>
+                    <span style={{ padding: '2px 4px', backgroundColor: darkMode ? '#8ab4f8' : 'blue', color: darkMode ? '#202124' : 'white', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold' }}>{circuitCalcResult.node1}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: darkMode ? '#e8eaed' : '#333' }}>{circuitCalcResult.ct}</span>
+                    <span style={{ padding: '2px 4px', backgroundColor: darkMode ? '#f28b82' : 'red', color: darkMode ? '#202124' : 'white', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold' }}>{circuitCalcResult.node2}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: darkMode ? '#e8eaed' : '#333' }}>{circuitCalcResult.to}</span>
                     <button
                       onClick={() => onCalcAll(circuitCalcResult.node1, circuitCalcResult.node2)}
                       style={{
@@ -327,20 +314,20 @@ const CircuitRow = memo(function CircuitRow({
                       const containsJB = nodeText.includes('JB');
 
                       let nodeBgColor = 'transparent';
-                      let nodeTextColor = 'inherit';
+                      let nodeTextColor = darkMode ? '#e8eaed' : 'inherit';
 
                       if (isFirstSelected) {
-                        nodeBgColor = 'blue';
-                        nodeTextColor = 'white';
+                        nodeBgColor = darkMode ? '#8ab4f8' : 'blue';
+                        nodeTextColor = darkMode ? '#202124' : 'white';
                       } else if (isSecondSelected) {
-                        nodeBgColor = 'red';
-                        nodeTextColor = 'white';
+                        nodeBgColor = darkMode ? '#f28b82' : 'red';
+                        nodeTextColor = darkMode ? '#202124' : 'white';
                       } else if (containsJB) {
-                        nodeBgColor = '#d2fdd8';
-                        nodeTextColor = '#333';
+                        nodeBgColor = darkMode ? '#1e3a2e' : '#d2fdd8';
+                        nodeTextColor = darkMode ? '#81c995' : '#333';
                       } else if (endsWithAlpha) {
-                        nodeBgColor = 'rgba(233, 231, 255, 0.48)';
-                        nodeTextColor = '#333';
+                        nodeBgColor = darkMode ? 'rgba(174, 137, 250, 0.3)' : 'rgba(233, 231, 255, 0.48)';
+                        nodeTextColor = darkMode ? '#d7aefb' : '#333';
                       }
 
                       return (
@@ -383,7 +370,7 @@ const CircuitRow = memo(function CircuitRow({
                               fontWeight: (isFirstSelected || isSecondSelected || containsJB || endsWithAlpha) ? 'bold' : 'normal',
                               cursor: 'pointer',
                               marginBottom: '3px',
-                              boxShadow: containsJB ? '0px 0px 5px 5px rgba(67, 255, 83, 0.377)' : 'none'
+                              boxShadow: containsJB ? (darkMode ? '0px 0px 5px 5px rgba(129, 201, 149, 0.4)' : '0px 0px 5px 5px rgba(67, 255, 83, 0.377)') : 'none'
                             }}
                           >
                             {nodeText}
@@ -402,7 +389,7 @@ const CircuitRow = memo(function CircuitRow({
           {!showType && !showBlock && !showNode && !hasMemo && (
             <tr>
               {renderCircuitCell()}
-              <td colSpan={6} style={{ ...cellStyle, backgroundColor: '#fafafa' }}></td>
+              <td colSpan={6} style={{ ...cellStyle, backgroundColor: darkMode ? '#202124' : '#fafafa' }}></td>
             </tr>
           )}
         </tbody>
@@ -417,11 +404,11 @@ const CircuitRow = memo(function CircuitRow({
     prevProps.virtualRow.index === nextProps.virtualRow.index &&
     prevProps.isHighlighted === nextProps.isHighlighted &&
     prevProps.isSelected === nextProps.isSelected &&
-    prevProps.activeSetBlockCircuit === nextProps.activeSetBlockCircuit &&
     prevProps.tbnState === nextProps.tbnState &&
     prevProps.extraFeaturesVisible === nextProps.extraFeaturesVisible &&
     prevProps.circuitSelectedNodes === nextProps.circuitSelectedNodes &&
-    prevProps.circuitCalcResult === nextProps.circuitCalcResult
+    prevProps.circuitCalcResult === nextProps.circuitCalcResult &&
+    prevProps.darkMode === nextProps.darkMode
   );
 });
 
